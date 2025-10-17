@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homelab Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .system-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .grafana { background: linear-gradient(45deg, #FF6B35, #F7931E); }
+        .prometheus { background: linear-gradient(45deg, #E6522C, #FF6B35); }
+        .loki { background: linear-gradient(45deg, #00A3E0, #0082C9); }
+        .portainer { background: linear-gradient(45deg, #13BEF9, #0082C9); }
+        .jellyfin { background: linear-gradient(45deg, #00A4DC, #7B68EE); }
+        .ntopng { background: linear-gradient(45deg, #6F42C1, #5A32A3); }
+        .cadvisor { background: linear-gradient(45deg, #FF5722, #E64A19); }
+        .nginx { background: linear-gradient(45deg, #009639, #00C851); }
+        .otel { background: linear-gradient(45deg, #425CC7, #3142A5); }
+
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .service-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .service-url {
+            font-size: 0.9rem;
+            color: #888;
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .service-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Homelab Monitoring Dashboard</h1>
+            <p>OpenTelemetry + Grafana LGTM Stack</p>
+        </div>
+
+        <div class="system-info">
+            <div class="info-item">
+                <div class="info-value" id="server-ip">Loading...</div>
+                <div class="info-label">Server IP</div>
+            </div>
+            <div class="info-item">
+                <div class="info-value">9</div>
+                <div class="info-label">Services</div>
+            </div>
+            <div class="info-item">
+                <div class="info-value" id="current-time">Loading...</div>
+                <div class="info-label">Current Time</div>
+            </div>
+            <div class="info-item">
+                <div class="info-value">OpenTelemetry</div>
+                <div class="info-label">Telemetry Stack</div>
+            </div>
+        </div>
+
+        <div class="services-grid">
+            <a href="" class="service-card" id="grafana-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon grafana">📊</div>
+                <div class="service-title">Grafana</div>
+                <div class="service-description">Unified observability - logs, metrics & dashboards</div>
+                <div class="service-url">:3000</div>
+            </a>
+
+            <a href="" class="service-card" id="prometheus-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon prometheus">🔥</div>
+                <div class="service-title">Prometheus</div>
+                <div class="service-description">Metrics collection and time-series database</div>
+                <div class="service-url">:9090</div>
+            </a>
+
+            <a href="" class="service-card" id="loki-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon loki">📝</div>
+                <div class="service-title">Loki</div>
+                <div class="service-description">Log aggregation and querying system</div>
+                <div class="service-url">:3100</div>
+            </a>
+
+            <a href="" class="service-card" id="otel-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon otel">🔄</div>
+                <div class="service-title">OTEL Collector</div>
+                <div class="service-description">OpenTelemetry unified telemetry pipeline</div>
+                <div class="service-url">:4317</div>
+            </a>
+
+            <a href="" class="service-card" id="portainer-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon portainer">🐳</div>
+                <div class="service-title">Portainer</div>
+                <div class="service-description">Docker container management interface</div>
+                <div class="service-url">:9000</div>
+            </a>
+
+            <a href="" class="service-card" id="jellyfin-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon jellyfin">🎬</div>
+                <div class="service-title">Jellyfin</div>
+                <div class="service-description">Personal media streaming server</div>
+                <div class="service-url">:8096</div>
+            </a>
+
+            <a href="" class="service-card" id="ntopng-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon ntopng">🌐</div>
+                <div class="service-title">ntopng</div>
+                <div class="service-description">Network traffic monitoring and analysis</div>
+                <div class="service-url">:3001</div>
+            </a>
+
+            <a href="" class="service-card" id="cadvisor-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon cadvisor">📈</div>
+                <div class="service-title">cAdvisor</div>
+                <div class="service-description">Container resource usage and performance</div>
+                <div class="service-url">:8080</div>
+            </a>
+
+            <a href="" class="service-card" id="nginx-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon nginx">⚙️</div>
+                <div class="service-title">Nginx Proxy Manager</div>
+                <div class="service-description">Reverse proxy and SSL certificate management</div>
+                <div class="service-url">:81</div>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>🔧 Homelab Monitoring v2.0 - OpenTelemetry Edition | Last updated: <span id="last-updated"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Get server IP from window location
+        document.getElementById('server-ip').textContent = window.location.hostname;
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            document.getElementById('last-updated').textContent = now.toLocaleString();
+        }
+
+        // Update service links with current hostname
+        function updateServiceLinks() {
+            const hostname = window.location.hostname;
+            const services = [
+                { selector: '#grafana-card', port: '3000' },
+                { selector: '#prometheus-card', port: '9090' },
+                { selector: '#loki-card', port: '3100' },
+                { selector: '#otel-card', port: '13133' },
+                { selector: '#portainer-card', port: '9000' },
+                { selector: '#jellyfin-card', port: '8096' },
+                { selector: '#ntopng-card', port: '3001' },
+                { selector: '#cadvisor-card', port: '8080' },
+                { selector: '#nginx-card', port: '81' }
+            ];
+
+            services.forEach(service => {
+                const element = document.querySelector(service.selector);
+                if (element) {
+                    element.href = `http://${hostname}:${service.port}`;
+                }
+            });
+        }
+
+        // Initialize
+        updateTime();
+        updateServiceLinks();
+
+        // Update time every second
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

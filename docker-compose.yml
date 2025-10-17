@@ -1,0 +1,36 @@
+version: '3.8'
+
+# Main Docker Compose orchestrator
+# This file includes all service-specific compose files using the modular pattern
+
+include:
+  # Core Observability Stack
+  - path: ./grafana/docker-compose.yml
+  - path: ./loki/docker-compose.yml
+  - path: ./promtail/docker-compose.yml
+  - path: ./prometheus/docker-compose.yml
+  - path: ./otel-collector/docker-compose.yml
+
+  # Monitoring & Metrics Exporters
+  - path: ./node-exporter/docker-compose.yml
+  - path: ./cadvisor/docker-compose.yml
+  - path: ./ntopng/docker-compose.yml
+
+  # Management Services
+  - path: ./portainer/docker-compose.yml
+  - path: ./nginx-proxy-manager/docker-compose.yml
+
+  # Media & Applications
+  - path: ./jellyfin/docker-compose.yml
+
+  # Landing Page
+  - path: ./landing-page/docker-compose.yml
+
+# Global network definition
+networks:
+  monitoring:
+    name: monitoring
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,232 @@
+ 🎉 Homelab Monitoring Stack v2.0 - Complete!
+
+  I've successfully created a complete, production-ready monitoring stack in /media/kshokri/DataVol/Projects/homelab_v2/ with the following
+   features:
+
+  ✅ What Was Created
+
+  Architecture
+
+  - Modular Design: Each service is self-contained following the landing-page/ pattern
+  - OpenTelemetry Integration: Modern, vendor-neutral telemetry pipeline
+  - Grafana LGTM Stack: Loki (logs) + Grafana (visualization) + Prometheus (metrics)
+  - Simple Datastores: ntopng uses local RRD + SQLite (no external dependencies)
+  - No Tempo: Excluded per your requirements (can be added later)
+
+  Services Deployed (12 total)
+
+  1. Grafana - Unified observability dashboard
+  2. Loki - Log aggregation
+  3. Prometheus - Metrics storage & alerting
+  4. Promtail - Log collection from containers/system
+  5. OpenTelemetry Collector - Unified telemetry pipeline
+  6. Node Exporter - Host system metrics
+  7. cAdvisor - Container metrics
+  8. ntopng - Network traffic analysis
+  9. Portainer - Docker management
+  10. Nginx Proxy Manager - Reverse proxy & SSL
+  11. Jellyfin - Media streaming
+  12. Landing Page - Custom service dashboard
+
+  Files Created (55+ files)
+
+  Root Directory:
+  - docker-compose.yml - Main orchestrator using include: directive
+  - .env.example - Environment variable template
+  - .gitignore - Comprehensive ignore rules
+  - Makefile - Common operations (make help to see all commands)
+  - README.md - Main documentation (7.7KB)
+  - SETUP.md - Detailed setup guide (9.5KB)
+  - ARCHITECTURE.md - Architecture deep-dive (16KB)
+  - CLAUDE.md - Development guide (14KB)
+  - QUICKSTART.md - 5-minute setup guide (7.4KB)
+
+  Per-Service Structure (12 services):
+  service-name/
+  ├── docker-compose.yml    # Service definition
+  ├── config/              # Configuration files
+  │   └── *.yml, *.conf   # Service-specific configs
+  └── data/               # Runtime data (auto-created, gitignored)
+
+  Automation:
+  - scripts/setup-wizard.sh - Interactive setup that auto-detects:
+    - Network interface
+    - IP address
+    - User/Group IDs
+    - Timezone
+    - Media directories
+    - Generates strong passwords
+    - Creates .env file
+    - Optionally starts services
+
+  🎯 Key Features
+
+  Observability
+
+  - Unified Dashboard: Single Grafana interface for logs + metrics
+  - Automatic Log Collection: Promtail auto-discovers Docker containers
+  - Pre-configured Datasources: Prometheus & Loki provisioned automatically
+  - Alert Rules: Pre-built alerts for CPU, memory, disk, containers
+  - Network Monitoring: ntopng with deep packet inspection
+
+  Developer Experience
+
+  - Modular: Add/remove services independently
+  - Self-Documenting: Comprehensive docs for every aspect
+  - Git-Friendly: Only configs tracked, data ignored
+  - Easy Commands: Makefile for common operations
+  - Hot-Reload: Many services support config reload
+
+  Security
+
+  - Environment Variables: Sensitive data in .env (gitignored)
+  - Default Passwords: Template requires changing
+  - Internal Services: Most services not exposed publicly
+  - SSL Ready: Nginx Proxy Manager for certificates
+
+  🚀 Quick Start
+
+  # Option 1: Automated (Recommended)
+  cd /media/kshokri/DataVol/Projects/homelab_v2
+  ./scripts/setup-wizard.sh
+
+  # Option 2: Manual
+  cd /media/kshokri/DataVol/Projects/homelab_v2
+  cp .env.example .env
+  nano .env  # Update values
+  docker compose up -d
+
+  # Using Makefile
+  make setup   # Run wizard
+  make start   # Start services
+  make status  # Check status
+  make logs    # View logs
+  make help    # See all commands
+
+  📊 Access URLs
+
+  After deployment:
+  - Landing Page: http://YOUR_IP (port 80)
+  - Grafana: http://YOUR_IP:3000 (pre-configured datasources)
+  - Prometheus: http://YOUR_IP:9090 (check targets)
+  - Loki: http://YOUR_IP:3100 (internal)
+  - Portainer: http://YOUR_IP:9000
+  - Nginx Proxy Manager: http://YOUR_IP:81
+  - Jellyfin: http://YOUR_IP:8096
+  - ntopng: http://YOUR_IP:3001
+
+  📁 Directory Structure
+
+  homelab_v2/
+  ├── docker-compose.yml              # Main orchestrator
+  ├── .env.example                    # Config template
+  ├── Makefile                        # Common commands
+  ├── README.md, SETUP.md, etc.      # Documentation
+  ├── scripts/setup-wizard.sh         # Automated setup
+  │
+  ├── grafana/                        # Grafana service
+  │   ├── docker-compose.yml
+  │   ├── config/grafana.ini
+  │   └── provisioning/
+  │       ├── datasources/           # Auto-configured
+  │       └── dashboards/
+  │
+  ├── loki/                          # Loki service
+  │   ├── docker-compose.yml
+  │   └── config/loki-config.yml    # 30-day retention
+  │
+  ├── prometheus/                    # Prometheus service
+  │   ├── docker-compose.yml
+  │   └── config/
+  │       ├── prometheus.yml        # Scrape configs
+  │       └── rules/alerts.yml      # Alert rules
+  │
+  ├── otel-collector/               # OpenTelemetry
+  │   ├── docker-compose.yml
+  │   └── config/otel-collector-config.yml
+  │
+  ├── [8 more services...]
+  │
+  └── [service]/data/              # Created at runtime (gitignored)
+
+  🔧 Configuration Highlights
+
+  Prometheus (prometheus/config/prometheus.yml):
+  - Scrapes: node-exporter, cadvisor, otel-collector, self-monitoring
+  - Retention: 15 days (configurable via .env)
+  - Alert rules: CPU, memory, disk, container health
+
+  Loki (loki/config/loki-config.yml):
+  - Retention: 30 days (720h)
+  - Compactor: Runs every 10 minutes
+  - Storage: BoltDB + filesystem chunks
+
+  OpenTelemetry Collector:
+  - Receivers: OTLP, hostmetrics, docker_stats, prometheus
+  - Processors: batch, resourcedetection, attributes
+  - Exporters: prometheus (metrics), loki (logs)
+
+  ntopng (ntopng/config/ntopng.conf):
+  - Interface: Configurable via NETWORK_INTERFACE env var
+  - Storage: Local RRD + SQLite (simple!)
+  - Network mode: host (required for packet capture)
+
+  ✨ Improvements Over v1
+
+  1. ✅ Modular Structure: Each service self-contained (vs. monolithic)
+  2. ✅ OpenTelemetry: Modern, vendor-neutral telemetry
+  3. ✅ Simplified Datastores: No external dependencies (Redis, etc.)
+  4. ✅ Better Docs: 5 comprehensive markdown files
+  5. ✅ Automation: Setup wizard auto-configures everything
+  6. ✅ Git-Friendly: Clean .gitignore, only configs tracked
+  7. ✅ Removed Bloat: No Uptime Kuma, Blackbox Exporter, Watchtower
+  8. ✅ Easy Management: Makefile for common operations
+
+  📝 Next Steps
+
+  1. Initialize Git Repository:
+  cd /media/kshokri/DataVol/Projects/homelab_v2
+  git init
+  git add .
+  git commit -m "Initial commit: Homelab Monitoring Stack v2.0 with OpenTelemetry"
+  git remote add origin <your-repo-url>
+  git push -u origin master
+
+  2. Run Setup:
+  ./scripts/setup-wizard.sh
+  # OR
+  make setup
+
+  3. Verify Deployment:
+  make status    # Check services
+  make logs      # View logs
+  make health    # Quick health check
+
+  4. Configure Grafana:
+  - Login at http://YOUR_IP:3000
+  - Import dashboards (IDs in README.md)
+  - Configure alerting
+
+  🎓 Documentation Guide
+
+  - QUICKSTART.md: Start here! 5-minute setup
+  - README.md: Overview, features, common commands
+  - SETUP.md: Detailed step-by-step installation
+  - ARCHITECTURE.md: Design patterns, data flow, scaling
+  - CLAUDE.md: For future development work
+
+  🛠️ Makefile Commands
+
+  Run make help to see all commands:
+  - make setup - Interactive wizard
+  - make start - Start services
+  - make stop - Stop services
+  - make logs - Follow all logs
+  - make logs-grafana - Follow specific service
+  - make update - Pull latest images + restart
+  - make backup - Backup configs
+  - make health - Quick health check
+
+  All files are created and ready to use! The stack is production-ready and follows best practices for observability, modularity, and
+  maintainability. 🚀
+

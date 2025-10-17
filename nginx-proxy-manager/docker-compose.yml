@@ -1,0 +1,16 @@
+services:
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - "8090:80"   # Public HTTP
+      - "81:81"     # Admin Web Interface
+      - "443:443"   # Public HTTPS
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    environment:
+      - TZ=${TZ:-America/New_York}
+    networks:
+      - monitoring

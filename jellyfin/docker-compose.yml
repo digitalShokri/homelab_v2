@@ -1,0 +1,28 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+      - "8096:8096"      # HTTP
+      - "8920:8920"      # HTTPS (optional)
+      - "7359:7359/udp"  # Auto-discovery
+      - "1900:1900/udp"  # DLNA
+    volumes:
+      - ./config:/config
+      - ./cache:/cache
+      - ${MEDIA_MOVIES}:/media/movies:ro
+      - ${MEDIA_TV}:/media/tv:ro
+      - ${MEDIA_MUSIC}:/media/music:ro
+      - ${MEDIA_PHOTOS}:/media/photos:ro
+    environment:
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_URL}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    networks:
+      - monitoring
+    # Uncomment for Intel hardware acceleration
+    # devices:
+    #   - /dev/dri/renderD128:/dev/dri/renderD128
+    #   - /dev/dri/card0:/dev/dri/card0

@@ -1,0 +1,72 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Data directories (all services)
+*/data/
+*/cache/
+*/lib/
+*/logs/
+
+# Jellyfin specific
+jellyfin/config/
+jellyfin/cache/
+
+# Nginx Proxy Manager
+nginx-proxy-manager/data/
+nginx-proxy-manager/letsencrypt/
+
+# Portainer
+portainer/data/
+
+# Prometheus
+prometheus/data/
+
+# Grafana
+grafana/data/
+
+# Loki
+loki/data/
+
+# ntopng
+ntopng/data/
+ntopng/lib/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.directory
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.settings/
+
+# Temporary files
+*.tmp
+*.log
+*.pid
+*.bak
+*.old
+
+# Backup files
+*.backup
+backups/
+
+# Docker
+.dockerignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node
+node_modules/
+npm-debug.log*
