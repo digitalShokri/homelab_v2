@@ -1,19 +1,22 @@
 services:
   ntopng:
-    image: ntop/ntopng:stable
+    image: ntop/ntopng:latest
     container_name: ntopng
     restart: unless-stopped
     ports:
       - "3001:3000"
     volumes:
-      - ./config/ntopng.conf:/etc/ntopng/ntopng.conf:ro
+      - ./config/ntopng.conf:/etc/ntopng/ntopng.conf
       - ./data:/var/lib/ntopng
-      - ./lib:/var/lib/ntopng/rrd
     command:
+      - "-i"
+      - "eno1"
+      - "-i"
+      - "docker0"
       - "/etc/ntopng/ntopng.conf"
     network_mode: host
     cap_add:
       - NET_ADMIN
       - NET_RAW
     environment:
-      - TZ=${TZ:-America/New_York}
+      - TZ=${TZ:-America/Chicago}

@@ -1,0 +1,18 @@
+services:
+  nvidia-gpu-exporter:
+    image: mindprince/nvidia_gpu_prometheus_exporter:0.1
+    container_name: nvidia-gpu-exporter
+    restart: unless-stopped
+    ports:
+      - "9445:9445"
+    devices:
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+    volumes:
+      - /usr/bin/nvidia-smi:/usr/bin/nvidia-smi:ro
+      - /usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:ro
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    networks:
+      - monitoring

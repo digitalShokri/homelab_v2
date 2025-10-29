@@ -1,7 +1,6 @@
-version: '3.8'
-
 # Main Docker Compose orchestrator
 # This file includes all service-specific compose files using the modular pattern
+# Note: version attribute is obsolete in Docker Compose v2+ and has been removed
 
 include:
   # Core Observability Stack
@@ -15,6 +14,7 @@ include:
   - path: ./node-exporter/docker-compose.yml
   - path: ./cadvisor/docker-compose.yml
   - path: ./ntopng/docker-compose.yml
+  - path: ./nvidia-gpu-exporter/docker-compose.yml
 
   # Management Services
   - path: ./portainer/docker-compose.yml

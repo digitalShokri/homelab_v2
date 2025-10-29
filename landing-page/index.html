@@ -115,6 +115,7 @@
         .cadvisor { background: linear-gradient(45deg, #FF5722, #E64A19); }
         .nginx { background: linear-gradient(45deg, #009639, #00C851); }
         .otel { background: linear-gradient(45deg, #425CC7, #3142A5); }
+        .nvidia { background: linear-gradient(45deg, #76B900, #5A9100); }
 
         .service-title {
             font-size: 1.5rem;
@@ -185,7 +186,7 @@
                 <div class="info-label">Server IP</div>
             </div>
             <div class="info-item">
-                <div class="info-value">9</div>
+                <div class="info-value">10</div>
                 <div class="info-label">Services</div>
             </div>
             <div class="info-item">
@@ -204,7 +205,7 @@
                 <div class="service-icon grafana">📊</div>
                 <div class="service-title">Grafana</div>
                 <div class="service-description">Unified observability - logs, metrics & dashboards</div>
-                <div class="service-url">:3000</div>
+                <div class="service-url">:3002</div>
             </a>
 
             <a href="" class="service-card" id="prometheus-card">
@@ -252,7 +253,7 @@
                 <div class="service-icon ntopng">🌐</div>
                 <div class="service-title">ntopng</div>
                 <div class="service-description">Network traffic monitoring and analysis</div>
-                <div class="service-url">:3001</div>
+                <div class="service-url">:3000</div>
             </a>
 
             <a href="" class="service-card" id="cadvisor-card">
@@ -269,6 +270,14 @@
                 <div class="service-title">Nginx Proxy Manager</div>
                 <div class="service-description">Reverse proxy and SSL certificate management</div>
                 <div class="service-url">:81</div>
+            </a>
+
+            <a href="" class="service-card" id="nvidia-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon nvidia">🎮</div>
+                <div class="service-title">NVIDIA GPU Exporter</div>
+                <div class="service-description">GPU metrics for Prometheus monitoring</div>
+                <div class="service-url">:9445</div>
             </a>
         </div>
 
@@ -292,15 +301,16 @@
         function updateServiceLinks() {
             const hostname = window.location.hostname;
             const services = [
-                { selector: '#grafana-card', port: '3000' },
+                { selector: '#grafana-card', port: '3002' },
                 { selector: '#prometheus-card', port: '9090' },
                 { selector: '#loki-card', port: '3100' },
                 { selector: '#otel-card', port: '13133' },
                 { selector: '#portainer-card', port: '9000' },
                 { selector: '#jellyfin-card', port: '8096' },
-                { selector: '#ntopng-card', port: '3001' },
+                { selector: '#ntopng-card', port: '3000' },
                 { selector: '#cadvisor-card', port: '8080' },
-                { selector: '#nginx-card', port: '81' }
+                { selector: '#nginx-card', port: '81' },
+                { selector: '#nvidia-card', port: '9445' }
             ];
 
             services.forEach(service => {

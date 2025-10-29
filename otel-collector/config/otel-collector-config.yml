@@ -33,7 +33,7 @@ receivers:
     endpoint: unix:///var/run/docker.sock
     collection_interval: 30s
     timeout: 10s
-    api_version: 1.24
+    api_version: "1.25"
     metrics:
       container.memory.usage.limit:
         enabled: true
@@ -84,17 +84,9 @@ exporters:
     tls:
       insecure: true
 
-  # Export logs to Loki
-  loki:
-    endpoint: http://loki:3100/loki/api/v1/push
-    labels:
-      attributes:
-        service.name: "service_name"
-        host.name: "host_name"
-
-  # Logging exporter for debugging
-  logging:
-    loglevel: info
+  # Debug exporter for debugging (replaces deprecated logging exporter)
+  debug:
+    verbosity: normal
     sampling_initial: 5
     sampling_thereafter: 200
 
@@ -112,15 +104,21 @@ service:
     metrics:
       receivers: [otlp, hostmetrics, prometheus, docker_stats]
       processors: [memory_limiter, resourcedetection, attributes, batch]
-      exporters: [prometheus, prometheusremotewrite, logging]
+      exporters: [prometheus, prometheusremotewrite, debug]
 
     logs:
       receivers: [otlp]
       processors: [memory_limiter, resourcedetection, batch]
-      exporters: [loki, logging]
+      exporters: [debug]
 
   telemetry:
     logs:
       level: info
     metrics:
-      address: 0.0.0.0:8888
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: "0.0.0.0"
+                port: 8888

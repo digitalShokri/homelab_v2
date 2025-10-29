@@ -26,6 +26,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 - **Node Exporter** - Host system metrics
 - **cAdvisor** - Container resource metrics
 - **ntopng** - Network traffic analysis
+- **NVIDIA GPU Exporter** - GPU metrics (temperature, memory, utilization)
 
 ### Management
 - **Portainer** - Docker container management UI
@@ -80,7 +81,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 
 6. **Access the landing page**
    ```
-   http://YOUR_SERVER_IP
+   http://192.168.1.241
    ```
 
 ## 🔗 Service Access
@@ -89,15 +90,16 @@ Once deployed, access services at:
 
 | Service | URL | Default Credentials |
 |---------|-----|-------------------|
-| **Landing Page** | http://YOUR_SERVER_IP | - |
-| **Grafana** | http://YOUR_SERVER_IP:3000 | admin / (see .env) |
-| **Prometheus** | http://YOUR_SERVER_IP:9090 | - |
-| **Loki** | http://YOUR_SERVER_IP:3100 | - |
-| **Portainer** | http://YOUR_SERVER_IP:9000 | Create on first visit |
-| **Nginx Proxy Mgr** | http://YOUR_SERVER_IP:81 | admin@example.com / changeme |
-| **Jellyfin** | http://YOUR_SERVER_IP:8096 | Create on first visit |
-| **ntopng** | http://YOUR_SERVER_IP:3001 | - |
-| **cAdvisor** | http://YOUR_SERVER_IP:8080 | - |
+| **Landing Page** | http://192.168.1.241 | - |
+| **Grafana** | http://192.168.1.241:3002 | admin / (see .env) |
+| **Prometheus** | http://192.168.1.241:9090 | - |
+| **Loki** | http://192.168.1.241:3100 | - |
+| **Portainer** | http://192.168.1.241:9000 | Create on first visit |
+| **Nginx Proxy Mgr** | http://192.168.1.241:81 | admin@example.com / changeme |
+| **Jellyfin** | http://192.168.1.241:8096 | Create on first visit |
+| **ntopng** | http://192.168.1.241:3000 | No login required |
+| **cAdvisor** | http://192.168.1.241:8080 | - |
+| **NVIDIA GPU Exporter** | http://192.168.1.241:9445/metrics | - |
 
 ## 📊 Post-Deployment Configuration
 
@@ -110,6 +112,7 @@ Once deployed, access services at:
    - Docker Container Metrics: ID `179`
    - Loki Logs Dashboard: ID `13639`
    - cAdvisor: ID `14282`
+   - NVIDIA GPU Metrics: ID `14574` (for GPU monitoring)
 
 ### Alerting Setup
 
@@ -259,7 +262,7 @@ docker compose restart [service-name]
 
 ### Prometheus Not Scraping Targets
 
-1. Check target status: http://YOUR_SERVER_IP:9090/targets
+1. Check target status: http://192.168.1.241:9090/targets
 2. Verify services are in the `monitoring` network
 3. Check service names resolve:
    ```bash

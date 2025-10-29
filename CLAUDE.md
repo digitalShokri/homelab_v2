@@ -29,7 +29,7 @@ include:
 ## Stack Components
 
 ### Core Observability (Grafana LGTM Stack)
-- **Grafana** (port 3000): Visualization, dashboards, alerting
+- **Grafana** (port 3002): Visualization, dashboards, alerting
 - **Loki** (port 3100): Log aggregation using LogQL
 - **Prometheus** (port 9090): Metrics storage using PromQL
 - **Promtail** (port 9080): Log collection from Docker and system
@@ -40,7 +40,8 @@ include:
   - Exports: Prometheus (metrics), Loki (logs)
 - **Node Exporter** (port 9100): Host system metrics
 - **cAdvisor** (port 8080): Container resource metrics
-- **ntopng** (port 3001): Network traffic analysis (host network mode)
+- **ntopng** (port 3000): Network traffic analysis (host network mode)
+- **NVIDIA GPU Exporter** (port 9445): GPU metrics (utilization, temperature, memory)
 
 ### Management Services
 - **Portainer** (port 9000): Docker management UI
@@ -311,7 +312,7 @@ RRD/SQLite (stores) → ntopng Web UI (displays)
 
 ### Service Communication
 Services communicate by container name (Docker DNS):
-- `http://grafana:3000`
+- `http://grafana:3002`
 - `http://prometheus:9090`
 - `http://loki:3100`
 - etc.
@@ -326,7 +327,7 @@ Services communicate by container name (Docker DNS):
 | Service | Port | Protocol | Exposed |
 |---------|------|----------|---------|
 | Landing Page | 80 | HTTP | Yes |
-| Grafana | 3000 | HTTP | Yes |
+| Grafana | 3002 | HTTP | Yes |
 | Prometheus | 9090 | HTTP | Yes |
 | Loki | 3100 | HTTP | Internal |
 | OTEL Collector | 4317 | gRPC | Internal |
@@ -334,13 +335,14 @@ Services communicate by container name (Docker DNS):
 | OTEL Collector | 8888 | HTTP | Internal |
 | OTEL Collector | 8889 | HTTP | Internal |
 | Promtail | 9080 | HTTP | Internal |
-| ntopng | 3001 | HTTP | Yes |
+| ntopng | 3000 | HTTP | Yes |
 | Node Exporter | 9100 | HTTP | Internal |
 | cAdvisor | 8080 | HTTP | Yes |
 | Portainer | 9000 | HTTP | Yes |
 | NPM | 81 | HTTP | Yes |
 | NPM | 443 | HTTPS | Yes |
 | Jellyfin | 8096 | HTTP | Yes |
+| NVIDIA GPU Exporter | 9445 | HTTP | Internal |
 
 ## Troubleshooting Common Issues
 

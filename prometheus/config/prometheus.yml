@@ -62,6 +62,15 @@ scrape_configs:
     metrics_path: /lua/rest/v2/get/system/stats.lua
     scrape_interval: 30s
 
+  # NVIDIA GPU metrics
+  - job_name: 'nvidia-gpu'
+    static_configs:
+      - targets: ['nvidia-gpu-exporter:9445']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'homelab-server'
+
 # Remote write configuration for OpenTelemetry
 # Receives metrics from OTEL Collector
 remote_write:
