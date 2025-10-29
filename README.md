@@ -49,7 +49,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url> homelab-monitoring
+   git clone <your-repo-url> homelab_v2
    cd homelab-monitoring
    ```
 
