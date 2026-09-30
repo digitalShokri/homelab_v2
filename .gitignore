@@ -10,8 +10,26 @@
 */logs/
 
 # Jellyfin specific
-jellyfin/config/
+# Track only the settings files; metadata/ (library images), data/ (databases),
+# log/ and cache/ stay local.
+jellyfin/config/*
+!jellyfin/config/config/
+jellyfin/config/config/*.orig
+!jellyfin/config/plugins/
+jellyfin/config/plugins/*
+!jellyfin/config/plugins/configurations/
+!jellyfin/config/root/
 jellyfin/cache/
+
+# Databases and metrics stores (safety net for anything outside */data/)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.rrd
+wal/
+chunks_head/
 
 # Nginx Proxy Manager
 nginx-proxy-manager/data/
@@ -57,6 +75,7 @@ Thumbs.db
 
 # Backup files
 *.backup
+*.tar.gz
 backups/
 
 # Docker
