@@ -33,11 +33,16 @@ include:
 - **Loki** (port 3100): Log aggregation using LogQL
 - **Prometheus** (port 9090): Metrics storage using PromQL
 - **Promtail** (port 9080): Log collection from Docker and system
+- **Tempo** (port 3200, internal): Trace storage using TraceQL. Fed only by the
+  OTEL Collector; its OTLP ports 4317/4318 are reachable on the `monitoring`
+  network only. Metrics generator remote-writes span metrics and service
+  graphs to Prometheus. Retention 14d (`tempo/config/tempo.yml`).
 
 ### Telemetry Collection
 - **OpenTelemetry Collector** (ports 4317/4318): Unified telemetry pipeline
   - Receives: OTLP (gRPC/HTTP), host metrics, Docker stats
-  - Exports: Prometheus (metrics), Loki (logs)
+  - Exports: Prometheus (metrics, scraped from `:8889`), Tempo (traces);
+    OTLP logs go to `debug` only (not yet wired to Loki)
 - **Node Exporter** (port 9100): Host system metrics
 - **cAdvisor** (port 8080): Container resource metrics
 - **ntopng** (port 3000): Network traffic analysis (host network mode)
@@ -79,8 +84,8 @@ All environment-specific configuration. Key variables:
 
 ### OpenTelemetry Collector (`otel-collector/config/otel-collector-config.yml`)
 - **Receivers**: OTLP, hostmetrics, prometheus, docker_stats
-- **Processors**: batch, resourcedetection, attributes
-- **Exporters**: prometheus (metrics), loki (logs)
+- **Processors**: memory_limiter, resourcedetection, resource/drop-volatile (metrics only), attributes, batch
+- **Exporters**: prometheus (metrics, `:8889`), otlp/tempo (traces), debug (logs)
 - **Telemetry endpoint**: `:8888` (collector's own metrics)
 
 ### ntopng (`ntopng/config/ntopng.conf`)
@@ -279,6 +284,12 @@ Application → OTEL Collector (receivers) →
 OTEL Collector (exporters) → Prometheus → Grafana
 ```
 
+### How Traces Flow
+```
+Application → OTEL Collector (OTLP 4317/4318) → Tempo → Grafana (TraceQL)
+Tempo metrics generator → Prometheus (remote write) → service graph, span metrics
+```
+
 ### How Network Monitoring Works
 ```
 Network packets → ntopng (captures via eth0 in host mode) →
@@ -335,6 +346,8 @@ Services communicate by container name (Docker DNS):
 | OTEL Collector | 8888 | HTTP | Internal |
 | OTEL Collector | 8889 | HTTP | Internal |
 | Promtail | 9080 | HTTP | Internal |
+| Tempo | 3200 | HTTP | Internal (network only) |
+| Tempo OTLP | 4317/4318 | gRPC/HTTP | Internal (network only, fed by collector) |
 | ntopng | 3000 | HTTP | Yes |
 | Node Exporter | 9100 | HTTP | Internal |
 | cAdvisor | 8080 | HTTP | Yes |
@@ -400,6 +413,7 @@ docker compose ps [service-name]
 - Loki
 - OTEL Collector
 - Promtail
+- Tempo
 - Node Exporter
 - cAdvisor
 
@@ -506,5 +520,7 @@ cloudflared) sends its telemetry here instead of running its own Grafana
 - The `otel-collector` service name and OTLP HTTP port 4318.
 - The `404ambitions-mysql` and `404ambitions-cloudflared` scrape jobs in
   `prometheus/config/prometheus.yml`, which target the `ambitions-*` aliases.
+- The collector's `:8889` scrape path (dashboards query `exported_job="ghost"`).
+  Collector remote write stays off so metrics are not double-ingested.
 
 Start this stack before 404ambitions.

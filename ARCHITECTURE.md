@@ -168,13 +168,13 @@ Applications
 │                  │
 │ Exporters:       │
 │  - Prometheus    │
-│  - Loki          │
-│  - (Tempo)       │
+│  - Tempo         │
+│  - Debug (logs)  │
 └────┬─────┬───────┘
      │     │
-     │     └─> Loki (logs)
+     │     └─> Tempo (traces) ─> Prometheus (span metrics, remote write)
      │
-     └─> Prometheus (metrics)
+     └─> Prometheus (metrics, scraped from :8889)
 ```
 
 ## Network Architecture
@@ -196,12 +196,14 @@ Applications
 |--------------|------------|----------|------|---------|
 | Grafana | Prometheus | HTTP | 9090 | Query metrics |
 | Grafana | Loki | HTTP | 3100 | Query logs |
+| Grafana | Tempo | HTTP | 3200 | Query traces |
 | Prometheus | Node Exporter | HTTP | 9100 | Scrape metrics |
 | Prometheus | cAdvisor | HTTP | 8080 | Scrape metrics |
 | Prometheus | OTEL Collector | HTTP | 8889 | Scrape metrics |
+| Prometheus | Tempo | HTTP | 3200 | Scrape metrics |
 | Promtail | Loki | HTTP | 3100 | Push logs |
-| OTEL Collector | Prometheus | HTTP | 9090 | Remote write |
-| OTEL Collector | Loki | HTTP | 3100 | Push logs |
+| OTEL Collector | Tempo | gRPC | 4317 | Push traces |
+| Tempo | Prometheus | HTTP | 9090 | Remote write (span metrics) |
 | Applications | OTEL Collector | gRPC | 4317 | Send telemetry |
 | Applications | OTEL Collector | HTTP | 4318 | Send telemetry |
 | Landing Page | All Services | HTTP | Various | Reverse proxy |
@@ -214,6 +216,7 @@ Applications
 |---------|-------------|----------|---------|-----------|
 | Prometheus | TSDB | `prometheus/data/` | Metrics time-series | 15 days |
 | Loki | BoltDB + Chunks | `loki/data/` | Log index + chunks | 30 days |
+| Tempo | Local blocks + WAL | `tempo/data/` | Traces | 14 days |
 | Grafana | SQLite | `grafana/data/` | Dashboards, users | Persistent |
 | ntopng | RRD + SQLite | `ntopng/data/`, `ntopng/lib/` | Flow data, RRDs | 7 days |
 | Portainer | JSON | `portainer/data/` | Config | Persistent |
@@ -264,6 +267,7 @@ Applications
 | Jellyfin | Username/Password | Create on first visit | Optional |
 | Prometheus | None | - | Add auth via NPM |
 | Loki | None | - | Internal only |
+| Tempo | None | - | Internal only (no host ports) |
 | ntopng | Optional | Disabled by default | Can enable in config |
 
 ### Network Security
@@ -272,6 +276,7 @@ Applications
 - Loki (port 3100)
 - OTEL Collector (ports 4317, 4318, 8888, 8889)
 - Promtail (port 9080)
+- Tempo (ports 3200, 4317, 4318; not published on the host)
 - Node Exporter (port 9100)
 
 **Exposed Services** (accessible from LAN):
@@ -404,7 +409,7 @@ sudo ufw enable
 
 ### Planned
 
-- [ ] Tempo integration for distributed tracing
+- [x] Tempo integration for distributed tracing
 - [ ] Alertmanager for advanced alerting
 - [ ] Mimir for long-term metrics storage
 - [ ] Service mesh observability (if needed)

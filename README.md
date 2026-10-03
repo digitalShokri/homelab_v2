@@ -20,6 +20,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 - **Loki** - Log aggregation and querying
 - **Prometheus** - Metrics storage and alerting
 - **Promtail** - Log collection from containers and system
+- **Tempo** - Distributed trace storage (fed by the OpenTelemetry Collector)
 - **OpenTelemetry Collector** - Unified telemetry pipeline
 
 ### Monitoring & Metrics
@@ -94,6 +95,7 @@ Once deployed, access services at:
 | **Grafana** | http://192.168.1.241:3002 | admin / (see .env) |
 | **Prometheus** | http://192.168.1.241:9090 | - |
 | **Loki** | http://192.168.1.241:3100 | - |
+| **Tempo** | Internal only (`http://tempo:3200`; use Grafana Explore) | - |
 | **Portainer** | http://192.168.1.241:9000 | Create on first visit |
 | **Nginx Proxy Mgr** | http://192.168.1.241:81 | admin@example.com / changeme |
 | **Jellyfin** | http://192.168.1.241:8096 | Create on first visit |
