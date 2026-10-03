@@ -495,3 +495,16 @@ When adding features:
 5. **Add monitoring** (Prometheus scrape, Loki collection)
 6. **Test** thoroughly
 7. **Document** in relevant .md files
+
+## Dependent project: 404ambitions
+
+`~/Projects/404ambitions` (the 404ambitions.com site stack: Ghost, MySQL,
+cloudflared) sends its telemetry here instead of running its own Grafana
+(decided 2026-09-25). Keep these stable or update both projects together:
+
+- The `monitoring` network name. 404ambitions joins it as an external network.
+- The `otel-collector` service name and OTLP HTTP port 4318.
+- The `404ambitions-mysql` and `404ambitions-cloudflared` scrape jobs in
+  `prometheus/config/prometheus.yml`, which target the `ambitions-*` aliases.
+
+Start this stack before 404ambitions.

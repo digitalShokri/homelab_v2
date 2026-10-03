@@ -33,7 +33,7 @@ receivers:
     endpoint: unix:///var/run/docker.sock
     collection_interval: 30s
     timeout: 10s
-    api_version: "1.25"
+    api_version: "1.44"
     metrics:
       container.memory.usage.limit:
         enabled: true
@@ -75,8 +75,8 @@ exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
     namespace: otel
-    const_labels:
-      environment: homelab
+    # `environment` is already added by the attributes processor; setting it
+    # here too made every metric fail with "duplicate label names".
 
   # Export to Prometheus via remote write
   prometheusremotewrite:

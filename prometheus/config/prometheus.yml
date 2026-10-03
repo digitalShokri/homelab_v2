@@ -71,6 +71,20 @@ scrape_configs:
         target_label: instance
         replacement: 'homelab-server'
 
+  # --- 404ambitions site stack (~/Projects/404ambitions) ---
+  # Joins the `monitoring` network with these aliases. Do not rename the
+  # network or remove these jobs without updating that project.
+  - job_name: '404ambitions-mysql'
+    static_configs:
+      - targets: ['ambitions-mysqld-exporter:9104']
+        labels:
+          deployment_environment: 'home'
+  - job_name: '404ambitions-cloudflared'
+    static_configs:
+      - targets: ['ambitions-cloudflared:2000']
+        labels:
+          deployment_environment: 'home'
+
 # Remote write configuration for OpenTelemetry
 # Receives metrics from OTEL Collector
 remote_write:
