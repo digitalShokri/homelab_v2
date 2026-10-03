@@ -84,14 +84,3 @@ scrape_configs:
       - targets: ['ambitions-cloudflared:2000']
         labels:
           deployment_environment: 'home'
-
-# Remote write configuration for OpenTelemetry
-# Receives metrics from OTEL Collector
-remote_write:
-  - url: http://localhost:9090/api/v1/write
-    queue_config:
-      capacity: 10000
-      max_shards: 5
-      min_shards: 1
-      max_samples_per_send: 5000
-      batch_send_deadline: 5s

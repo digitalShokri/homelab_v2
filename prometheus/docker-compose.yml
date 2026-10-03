@@ -17,5 +17,8 @@ services:
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}'
       - '--web.enable-lifecycle'
       - '--web.enable-admin-api'
+      # Receives Tempo metrics-generator output (span metrics, service graph)
+      - '--web.enable-remote-write-receiver'
+      - '--enable-feature=exemplar-storage'
     networks:
       - monitoring

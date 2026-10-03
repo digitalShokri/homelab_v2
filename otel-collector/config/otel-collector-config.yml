@@ -70,6 +70,22 @@ processors:
         value: otel-collector
         action: insert
 
+  # Drop resource attributes that change on every process restart. With
+  # resource_to_telemetry_conversion they would become labels and create a
+  # new series per restart. Metrics pipeline only; traces keep them.
+  resource/drop-volatile:
+    attributes:
+      - key: process.pid
+        action: delete
+      - key: process.command_args
+        action: delete
+      - key: process.command_line
+        action: delete
+      - key: process.executable.path
+        action: delete
+      - key: service.instance.id
+        action: delete
+
 exporters:
   # Export metrics to Prometheus
   prometheus:
@@ -77,12 +93,17 @@ exporters:
     namespace: otel
     # `environment` is already added by the attributes processor; setting it
     # here too made every metric fail with "duplicate label names".
+    # Keep resource attributes (e.g. container.name on docker_stats) as labels.
+    resource_to_telemetry_conversion:
+      enabled: true
 
-  # Export to Prometheus via remote write
-  prometheusremotewrite:
-    endpoint: http://prometheus:9090/api/v1/write
-    tls:
-      insecure: true
+  # Remote write is disabled: metrics reach Prometheus by scraping :8889,
+  # which is what produces exported_job="ghost" etc. Enabling both would
+  # double-ingest every series under different label sets.
+  # prometheusremotewrite:
+  #   endpoint: http://prometheus:9090/api/v1/write
+  #   tls:
+  #     insecure: true
 
   # Debug exporter for debugging (replaces deprecated logging exporter)
   debug:
@@ -103,8 +124,8 @@ service:
   pipelines:
     metrics:
       receivers: [otlp, hostmetrics, prometheus, docker_stats]
-      processors: [memory_limiter, resourcedetection, attributes, batch]
-      exporters: [prometheus, prometheusremotewrite, debug]
+      processors: [memory_limiter, resourcedetection, resource/drop-volatile, attributes, batch]
+      exporters: [prometheus, debug]
 
     logs:
       receivers: [otlp]
