@@ -6,7 +6,7 @@ include:
   # Core Observability Stack
   - path: ./grafana/docker-compose.yml
   - path: ./loki/docker-compose.yml
-  - path: ./promtail/docker-compose.yml
+  - path: ./alloy/docker-compose.yml
   - path: ./prometheus/docker-compose.yml
   - path: ./otel-collector/docker-compose.yml
   - path: ./tempo/docker-compose.yml

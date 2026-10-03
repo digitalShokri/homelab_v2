@@ -1,0 +1,167 @@
+// Grafana Alloy: log shipping for homelab_v2 (replaced Promtail).
+// LABEL CONTRACT: names and values must stay identical to the Promtail
+// output. Consumers: 404ambitions dashboard ({project="404ambitions"}),
+// Tempo traces->logs (service.name -> service), Lab-addon-n8n
+// ({project="lab-addon-n8n"}), job=varlogs|syslog|conky.
+// Do not rewrite log lines either: Loki's TraceID derived field reads them.
+
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+// Live debugging in the UI (127.0.0.1:12345).
+livedebugging {
+	enabled = true
+}
+
+// ---------------------------------------------------------------------------
+// Job "docker": every container on the host, any compose project
+// ---------------------------------------------------------------------------
+discovery.docker "containers" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "5s"
+}
+
+// Rules only (targets = []). loki.source.docker applies them itself, which
+// is the only place __meta_docker_container_log_stream exists. Do not feed
+// discovery.relabel output targets in instead, or the stream label is lost.
+discovery.relabel "docker" {
+	targets = []
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/(.*)"
+		target_label  = "container"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_log_stream"]
+		target_label  = "stream"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+		target_label  = "project"
+	}
+}
+
+loki.source.docker "containers" {
+	host             = "unix:///var/run/docker.sock"
+	targets          = discovery.docker.containers.targets
+	relabel_rules    = discovery.relabel.docker.rules
+	refresh_interval = "5s"
+	forward_to       = [loki.process.cutover_guard.receiver]
+}
+
+// ---------------------------------------------------------------------------
+// Job "system": /var/log/*log -> job="varlogs"
+// (also matches /var/log/syslog and binary lastlog: Promtail parity)
+// ---------------------------------------------------------------------------
+loki.source.file "varlogs" {
+	targets = [{
+		__path__ = "/var/log/*log",
+		job      = "varlogs",
+	}]
+	// tail_from_end only applies to files with no stored position.
+	tail_from_end = true
+	// Cut-over only: import Promtail's file offsets. Remove after acceptance.
+	legacy_positions_file = "/var/lib/alloy/data/promtail-positions.yaml"
+	forward_to            = [loki.process.cutover_guard.receiver]
+
+	file_match {
+		enabled     = true
+		sync_period = "10s"
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Job "syslog": /var/log/syslog -> job="syslog"
+// ---------------------------------------------------------------------------
+loki.source.file "syslog" {
+	targets = [{
+		__path__ = "/var/log/syslog",
+		job      = "syslog",
+	}]
+	// tail_from_end only applies to files with no stored position.
+	tail_from_end = true
+	// Cut-over only: import Promtail's file offsets. Remove after acceptance.
+	legacy_positions_file = "/var/lib/alloy/data/promtail-positions.yaml"
+	forward_to            = [loki.process.cutover_guard.receiver]
+
+	file_match {
+		enabled     = true
+		sync_period = "10s"
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Job "conky": the whole journal (not only conky.service), labeled
+// job="conky", app="conky" plus unit/host/identifier. Promtail parity.
+// ---------------------------------------------------------------------------
+discovery.relabel "journal" {
+	targets = []
+
+	rule {
+		source_labels = ["__journal__systemd_unit"]
+		target_label  = "unit"
+	}
+
+	rule {
+		source_labels = ["__journal__hostname"]
+		target_label  = "host"
+	}
+
+	rule {
+		source_labels = ["__journal_syslog_identifier"]
+		target_label  = "identifier"
+	}
+}
+
+loki.source.journal "conky" {
+	path          = "/var/log/journal"
+	max_age       = "12h"
+	labels        = {job = "conky", app = "conky"}
+	relabel_rules = discovery.relabel.journal.rules
+	forward_to    = [loki.process.conky.receiver]
+}
+
+// Ported from Promtail's pipeline_stages. With format_as_json=false there is
+// no extracted "message" key, so this is a no-op. Kept for parity.
+loki.process "conky" {
+	stage.match {
+		selector = "{unit=\"conky.service\"}"
+
+		stage.output {
+			source = "message"
+		}
+	}
+	forward_to = [loki.process.cutover_guard.receiver]
+}
+
+// ---------------------------------------------------------------------------
+// Cut-over guard: drop Docker/journal backfill on first start (section 5).
+// Remove after acceptance (commit 2), or it will also drop real backlog
+// after any Alloy outage longer than older_than.
+// ---------------------------------------------------------------------------
+loki.process "cutover_guard" {
+	stage.drop {
+		older_than          = "5m"
+		drop_counter_reason = "alloy_cutover_backfill"
+	}
+	forward_to = [loki.write.local.receiver]
+}
+
+// ---------------------------------------------------------------------------
+// Output
+// ---------------------------------------------------------------------------
+loki.write "local" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

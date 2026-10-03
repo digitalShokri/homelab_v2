@@ -50,6 +50,9 @@ loki/data/
 # Tempo
 tempo/data/
 
+# Alloy
+alloy/data/
+
 # ntopng
 ntopng/data/
 ntopng/lib/

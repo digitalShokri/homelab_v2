@@ -93,6 +93,9 @@ fix_data_dir "loki" "10001" "10001" "Loki user"
 # Tempo - UID 10001
 fix_data_dir "tempo" "10001" "10001" "Tempo user"
 
+# Alloy - runs as root (docker.sock, /var/log)
+fix_data_dir "alloy" "0" "0" "Root (docker.sock, /var/log)"
+
 # Portainer - runs as root but use user ownership for easier management
 fix_data_dir "portainer" "$USER_UID" "$USER_GID" "User ownership"
 

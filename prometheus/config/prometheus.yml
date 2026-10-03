@@ -76,6 +76,11 @@ scrape_configs:
     static_configs:
       - targets: ['tempo:3200']
 
+  # Grafana Alloy (log shipper to Loki)
+  - job_name: 'alloy'
+    static_configs:
+      - targets: ['alloy:12345']
+
   # --- 404ambitions site stack (~/Projects/404ambitions) ---
   # Joins the `monitoring` network with these aliases. Do not rename the
   # network or remove these jobs without updating that project.

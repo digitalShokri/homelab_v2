@@ -1,0 +1,26 @@
+services:
+  alloy:
+    image: grafana/alloy:v1.20.1
+    container_name: alloy
+    restart: unless-stopped
+    # Root for docker.sock and root-only files under /var/log (Promtail ran
+    # as root too). The image default is already root; this keeps it explicit.
+    user: "0"
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./config/config.alloy:/etc/alloy/config.alloy:ro
+      - ./data:/var/lib/alloy/data   # positions; survive restarts and recreates
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro         # includes the persistent journal
+    # UI on localhost only (ssh -L 12345:localhost:12345 to view). Prometheus
+    # scrapes alloy:12345 on the monitoring network.
+    ports:
+      - "127.0.0.1:12345:12345"
+    networks:
+      - monitoring
+    depends_on:
+      - loki

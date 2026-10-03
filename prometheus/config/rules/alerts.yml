@@ -76,3 +76,15 @@ groups:
         annotations:
           summary: "Tempo is down"
           description: "Tempo has not been scrapeable for 5 minutes; traces are being dropped by the collector."
+
+  - name: logging_alerts
+    interval: 30s
+    rules:
+      - alert: AlloyDown
+        expr: up{job="alloy"} == 0 or absent(up{job="alloy"})
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alloy is down"
+          description: "Alloy has not been scrapeable for 5 minutes; container, file and journal logs are not reaching Loki."
