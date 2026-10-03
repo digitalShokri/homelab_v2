@@ -214,6 +214,9 @@ create_data_dir "prometheus" "65534" "65534" "Prometheus nobody user"
 # Loki - runs as UID 10001
 create_data_dir "loki" "10001" "10001" "Loki default user"
 
+# Tempo - runs as UID 10001
+create_data_dir "tempo" "10001" "10001" "Tempo default user"
+
 # Alloy - runs as root (reads docker.sock and /var/log)
 create_data_dir "alloy" "0" "0" "Root (Alloy reads docker.sock and /var/log)"
 
