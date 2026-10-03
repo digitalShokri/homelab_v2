@@ -1,0 +1,45 @@
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: true
+    jsonData:
+      httpMethod: GET
+      streamingEnabled:
+        search: true
+      tracesToLogsV2:
+        datasourceUid: P8E80F9AEF21F6940
+        spanStartTimeShift: '-5m'
+        spanEndTimeShift: '5m'
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: false
+        tags:
+          # Promtail labels Docker logs with service=<compose service name>,
+          # which matches service.name for ghost and n8n.
+          - key: service.name
+            value: service
+      tracesToMetrics:
+        datasourceUid: PBFA97CFB590B2093
+        spanStartTimeShift: '-5m'
+        spanEndTimeShift: '5m'
+        tags:
+          - key: service.name
+            value: service
+        queries:
+          - name: Request rate
+            query: 'sum(rate(traces_spanmetrics_calls_total{$$__tags}[5m]))'
+          - name: Error rate
+            query: 'sum(rate(traces_spanmetrics_calls_total{$$__tags,status_code="STATUS_CODE_ERROR"}[5m]))'
+      serviceMap:
+        datasourceUid: PBFA97CFB590B2093
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: P8E80F9AEF21F6940

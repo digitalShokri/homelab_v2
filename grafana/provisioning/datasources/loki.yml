@@ -3,13 +3,16 @@ apiVersion: 1
 datasources:
   - name: Loki
     type: loki
+    uid: P8E80F9AEF21F6940
     access: proxy
     url: http://loki:3100
     editable: true
     jsonData:
       maxLines: 1000
       derivedFields:
-        - datasourceUid: Prometheus
-          matcherRegex: "traceID=(\\w+)"
+        # Logs -> traces. No app logs carry a trace id yet; check this regex
+        # against a real Ghost/n8n log line once their tracing is on.
+        - datasourceUid: tempo
+          matcherRegex: '(?:traceID|trace_id|traceId)[=":\s]+"?(\w+)'
           name: TraceID
           url: "$${__value.raw}"
