@@ -1,0 +1,18 @@
+services:
+  tempo:
+    image: grafana/tempo:3.1.0
+    container_name: tempo
+    restart: unless-stopped
+    command: ["-target=all", "-config.file=/etc/tempo.yml"]
+    volumes:
+      - ./config/tempo.yml:/etc/tempo.yml:ro
+      - ./data:/var/tempo
+    # No published ports: the collector owns host 4317/4318, and Grafana,
+    # the collector and Prometheus reach Tempo on the monitoring network.
+    # Uncomment only if you need the API from the LAN.
+    # ports:
+    #   - "3200:3200"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus

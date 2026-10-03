@@ -71,6 +71,11 @@ scrape_configs:
         target_label: instance
         replacement: 'homelab-server'
 
+  # Tempo (trace storage; span metrics arrive via remote write)
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3200']
+
   # --- 404ambitions site stack (~/Projects/404ambitions) ---
   # Joins the `monitoring` network with these aliases. Do not rename the
   # network or remove these jobs without updating that project.

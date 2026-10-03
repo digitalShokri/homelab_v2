@@ -1,0 +1,60 @@
+# Tempo 3.x, monolithic mode (-target=all), local storage.
+# Fed only by the otel-collector; apps never send here directly.
+
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: homelab
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+
+query_frontend:
+  mcp_server:
+    enabled: false
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+# Retention: 14 days. In v3 retention is run by the backend worker; the
+# scheduler copy is set to match so the two never disagree.
+backend_worker:
+  compaction:
+    block_retention: 336h
+backend_scheduler:
+  provider:
+    compaction:
+      compaction:
+        block_retention: 336h
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: ["span-metrics", "service-graphs"]
+      # Classic histograms: works with Prometheus remote write without the
+      # native-histograms feature flag.
+      generate_native_histograms: classic
+
+usage_report:
+  reporting_enabled: false

@@ -105,6 +105,12 @@ exporters:
   #   tls:
   #     insecure: true
 
+  # Traces to Tempo (monitoring network only; Tempo publishes no host ports)
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
   # Debug exporter for debugging (replaces deprecated logging exporter)
   debug:
     verbosity: normal
@@ -126,6 +132,11 @@ service:
       receivers: [otlp, hostmetrics, prometheus, docker_stats]
       processors: [memory_limiter, resourcedetection, resource/drop-volatile, attributes, batch]
       exporters: [prometheus, debug]
+
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlp/tempo]
 
     logs:
       receivers: [otlp]

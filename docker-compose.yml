@@ -9,6 +9,7 @@ include:
   - path: ./promtail/docker-compose.yml
   - path: ./prometheus/docker-compose.yml
   - path: ./otel-collector/docker-compose.yml
+  - path: ./tempo/docker-compose.yml
 
   # Monitoring & Metrics Exporters
   - path: ./node-exporter/docker-compose.yml

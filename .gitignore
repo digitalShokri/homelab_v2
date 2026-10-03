@@ -47,6 +47,9 @@ grafana/data/
 # Loki
 loki/data/
 
+# Tempo
+tempo/data/
+
 # ntopng
 ntopng/data/
 ntopng/lib/

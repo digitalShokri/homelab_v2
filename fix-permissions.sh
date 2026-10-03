@@ -90,6 +90,9 @@ fix_data_dir "prometheus" "65534" "65534" "Nobody user"
 # Loki - UID 10001
 fix_data_dir "loki" "10001" "10001" "Loki user"
 
+# Tempo - UID 10001
+fix_data_dir "tempo" "10001" "10001" "Tempo user"
+
 # Portainer - runs as root but use user ownership for easier management
 fix_data_dir "portainer" "$USER_UID" "$USER_GID" "User ownership"
 

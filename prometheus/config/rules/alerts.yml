@@ -64,3 +64,15 @@ groups:
         annotations:
           summary: "Container high memory usage"
           description: "Container {{ $labels.name }} memory usage is above 85% (current: {{ $value }}%)"
+
+  - name: tracing_alerts
+    interval: 30s
+    rules:
+      - alert: TempoDown
+        expr: up{job="tempo"} == 0 or absent(up{job="tempo"})
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tempo is down"
+          description: "Tempo has not been scrapeable for 5 minutes; traces are being dropped by the collector."
