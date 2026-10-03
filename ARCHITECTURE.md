@@ -66,8 +66,8 @@ include:
     │              │                 │            │
     ▼              ▼                 ▼            ▼
 ┌─────────┐  ┌─────────────┐  ┌──────────┐  ┌─────────┐
-│  Node   │  │    OTEL     │  │ Promtail │  │cAdvisor │
-│Exporter │  │  Collector  │  │  :9080   │  │  :8080  │
+│  Node   │  │    OTEL     │  │  Alloy   │  │cAdvisor │
+│Exporter │  │  Collector  │  │  :12345  │  │  :8080  │
 │  :9100  │  │4317/4318/... │  └────┬─────┘  └─────────┘
 └─────────┘  └──────┬──────┘       │
                     │              │ Reads logs
@@ -77,7 +77,7 @@ include:
     ┌────────────────────────────────────────────┐
     │         Docker Engine & Containers         │
     │              /var/log/*                    │
-    │       /var/lib/docker/containers/*         │
+    │    Docker API (socket), journald           │
     └────────────────────────────────────────────┘
                     │
                     │ Network Traffic
@@ -96,11 +96,11 @@ include:
 ```
 Docker Containers
        │
-       ├─> Container logs (/var/lib/docker/containers/*.log)
+       ├─> Container logs (Docker API via /var/run/docker.sock)
        │          │
        │          ▼
        │    ┌──────────┐
-       │    │ Promtail │
+       │    │  Alloy   │
        │    └────┬─────┘
        │         │
        │         │ HTTP Push
@@ -115,9 +115,9 @@ Docker Containers
        └────>│ Grafana │
             └─────────┘
 
-System Logs (/var/log/*)
+System Logs (/var/log/*) and journald
        │
-       └─> Promtail ─> Loki ─> Grafana
+       └─> Alloy ─> Loki ─> Grafana
 ```
 
 ### Metrics Pipeline
@@ -201,7 +201,8 @@ Applications
 | Prometheus | cAdvisor | HTTP | 8080 | Scrape metrics |
 | Prometheus | OTEL Collector | HTTP | 8889 | Scrape metrics |
 | Prometheus | Tempo | HTTP | 3200 | Scrape metrics |
-| Promtail | Loki | HTTP | 3100 | Push logs |
+| Alloy | Loki | HTTP | 3100 | Push logs |
+| Prometheus | Alloy | HTTP | 12345 | Scrape metrics |
 | OTEL Collector | Tempo | gRPC | 4317 | Push traces |
 | Tempo | Prometheus | HTTP | 9090 | Remote write (span metrics) |
 | Applications | OTEL Collector | gRPC | 4317 | Send telemetry |
@@ -217,6 +218,7 @@ Applications
 | Prometheus | TSDB | `prometheus/data/` | Metrics time-series | 15 days |
 | Loki | BoltDB + Chunks | `loki/data/` | Log index + chunks | 30 days |
 | Tempo | Local blocks + WAL | `tempo/data/` | Traces | 14 days |
+| Alloy | Positions | `alloy/data/` | Read offsets (keep across restarts) | Persistent |
 | Grafana | SQLite | `grafana/data/` | Dashboards, users | Persistent |
 | ntopng | RRD + SQLite | `ntopng/data/`, `ntopng/lib/` | Flow data, RRDs | 7 days |
 | Portainer | JSON | `portainer/data/` | Config | Persistent |
@@ -253,7 +255,6 @@ Applications
 - Loki logs: `loki/data/`
 - ntopng flow data: `ntopng/data/`
 - cAdvisor data: (in-memory)
-- Promtail positions: (regenerated)
 
 ## Security Architecture
 
@@ -275,7 +276,7 @@ Applications
 **Internal-Only Services** (not exposed to internet):
 - Loki (port 3100)
 - OTEL Collector (ports 4317, 4318, 8888, 8889)
-- Promtail (port 9080)
+- Alloy (port 12345, bound to localhost)
 - Tempo (ports 3200, 4317, 4318; not published on the host)
 - Node Exporter (port 9100)
 
@@ -353,7 +354,7 @@ sudo ufw enable
 3. Add configuration files to `new-service/config/`
 4. Add include to main `docker-compose.yml`
 5. If exposing metrics: Add scrape job to Prometheus
-6. If generating logs: Promtail auto-discovers Docker logs
+6. If generating logs: Alloy auto-discovers Docker logs
 7. Update landing page if user-facing
 
 ### Adding Custom Metrics

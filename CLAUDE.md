@@ -32,7 +32,9 @@ include:
 - **Grafana** (port 3002): Visualization, dashboards, alerting
 - **Loki** (port 3100): Log aggregation using LogQL
 - **Prometheus** (port 9090): Metrics storage using PromQL
-- **Promtail** (port 9080): Log collection from Docker and system
+- **Alloy** (port 12345, localhost only): Log collection from the Docker API,
+  `/var/log` and journald, shipped to Loki. Positions persist in `alloy/data/`.
+  Label contract in `alloy/config/config.alloy`.
 - **Tempo** (port 3200, internal): Trace storage using TraceQL. Fed only by the
   OTEL Collector; its OTLP ports 4317/4318 are reachable on the `monitoring`
   network only. Metrics generator remote-writes span metrics and service
@@ -77,10 +79,19 @@ All environment-specific configuration. Key variables:
 - **Storage**: BoltDB (index) + Filesystem (chunks)
 - **Compactor**: Runs every 10m to delete old logs
 
-### Promtail (`promtail/config/promtail-config.yml`)
-- **Docker logs**: Auto-discovers via Docker socket
-- **System logs**: Scrapes `/var/log/*`
-- **Labels**: Extracts container name, service, project from Docker labels
+### Alloy (`alloy/config/config.alloy`)
+- **Docker logs**: `loki.source.docker` reads every container on the host
+  through the Docker API (socket). Labels: `container`, `stream`, `service`,
+  `project` (compose service and project). No `job` label.
+- **System logs**: `/var/log/*log` → `job="varlogs"`, `/var/log/syslog` →
+  `job="syslog"` (plus `filename`)
+- **Journal**: whole journal → `job="conky"`, `app="conky"`, plus `unit`,
+  `host`, `identifier`
+- **Label contract**: do not rename or add labels. The 404ambitions dashboard
+  queries `{project="404ambitions", service=~"$service"}`, and Tempo's
+  traces-to-logs link maps `service.name` to the `service` label.
+- **UI**: `ssh -L 12345:localhost:12345 <box>`, then http://localhost:12345
+- **Validate**: `docker run --rm -v "$PWD/alloy/config:/c:ro" grafana/alloy:v1.20.1 validate /c/config.alloy`
 
 ### OpenTelemetry Collector (`otel-collector/config/otel-collector-config.yml`)
 - **Receivers**: OTLP, hostmetrics, prometheus, docker_stats
@@ -192,7 +203,7 @@ docker compose restart [service-name]
          - targets: ['new-service:PORT']
    ```
 
-5. Logs are auto-collected by Promtail (Docker logs)
+5. Logs are auto-collected by Alloy (Docker logs)
 
 6. Update landing page if user-facing service
 
@@ -268,8 +279,10 @@ docker compose restart [service-name]
 
 ### How Logs Flow
 ```
-Container logs → Promtail (scrapes /var/lib/docker/containers/) →
+Container logs → Alloy (Docker API via socket) →
 Loki (stores) → Grafana (queries via LogQL)
+
+/var/log/*log, /var/log/syslog, journald → Alloy → Loki
 ```
 
 ### How Metrics Flow
@@ -345,7 +358,7 @@ Services communicate by container name (Docker DNS):
 | OTEL Collector | 4318 | HTTP | Internal |
 | OTEL Collector | 8888 | HTTP | Internal |
 | OTEL Collector | 8889 | HTTP | Internal |
-| Promtail | 9080 | HTTP | Internal |
+| Alloy | 12345 | HTTP | Localhost only |
 | Tempo | 3200 | HTTP | Internal (network only) |
 | Tempo OTLP | 4317/4318 | gRPC/HTTP | Internal (network only, fed by collector) |
 | ntopng | 3000 | HTTP | Yes |
@@ -380,10 +393,12 @@ docker compose ps [service-name]
    ```
 
 ### Loki Not Receiving Logs
-1. Check Promtail is running: `docker compose ps promtail`
-2. Check Promtail logs: `docker compose logs promtail`
-3. Verify Loki datasource in Grafana
-4. Test query in Grafana Explore: `{container="prometheus"}`
+1. Check Alloy is running: `docker compose ps alloy`
+2. Check Alloy logs: `docker compose logs alloy`
+3. Check component health in the Alloy UI (`localhost:12345`) and the
+   Prometheus target `up{job="alloy"}` (alert `AlloyDown`)
+4. Verify Loki datasource in Grafana
+5. Test query in Grafana Explore: `{container="prometheus"}`
 
 ### ntopng Not Capturing Traffic
 1. Verify interface: `ip a`
@@ -412,7 +427,7 @@ docker compose ps [service-name]
 - Prometheus
 - Loki
 - OTEL Collector
-- Promtail
+- Alloy
 - Tempo
 - Node Exporter
 - cAdvisor
@@ -522,5 +537,10 @@ cloudflared) sends its telemetry here instead of running its own Grafana
   `prometheus/config/prometheus.yml`, which target the `ambitions-*` aliases.
 - The collector's `:8889` scrape path (dashboards query `exported_job="ghost"`).
   Collector remote write stays off so metrics are not double-ingested.
+- The Loki labels `project`, `service` and `container` that Alloy sets on
+  Docker logs (the 404ambitions dashboard log panels).
+- The 404ambitions status-reporter probes homelab services by container name
+  (`status-reporter/reporter.mjs`). Renaming or replacing a service here
+  shows it as down on the public status page until that list is updated.
 
 Start this stack before 404ambitions.

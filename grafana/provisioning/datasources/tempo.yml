@@ -19,7 +19,7 @@ datasources:
         filterBySpanID: false
         customQuery: false
         tags:
-          # Promtail labels Docker logs with service=<compose service name>,
+          # Alloy labels Docker logs with service=<compose service name>,
           # which matches service.name for ghost and n8n.
           - key: service.name
             value: service

@@ -32,7 +32,7 @@ docker compose up -d
 - **Grafana** (http://YOUR_IP:3000) - Unified dashboards for logs and metrics
 - **Prometheus** (http://YOUR_IP:9090) - Metrics collection and alerting
 - **Loki** (http://YOUR_IP:3100) - Log aggregation
-- **Promtail** - Automatic log collection from all containers
+- **Alloy** - Automatic log collection from all containers, `/var/log` and journald
 - **OpenTelemetry Collector** - Modern telemetry pipeline
 
 ### System Monitoring
@@ -137,7 +137,7 @@ service-name/
 - **Prometheus scrape targets**: `prometheus/config/prometheus.yml`
 - **Prometheus alerts**: `prometheus/config/rules/alerts.yml`
 - **Loki retention**: `loki/config/loki-config.yml`
-- **Log collection**: `promtail/config/promtail-config.yml`
+- **Log collection**: `alloy/config/config.alloy`
 - **OpenTelemetry pipeline**: `otel-collector/config/otel-collector-config.yml`
 - **Network monitoring**: `ntopng/config/ntopng.conf`
 
@@ -199,11 +199,11 @@ docker network inspect monitoring
 
 ### No logs in Loki
 ```bash
-# Check Promtail is running
-docker compose ps promtail
+# Check Alloy is running
+docker compose ps alloy
 
-# Check Promtail logs
-docker compose logs promtail
+# Check Alloy logs
+docker compose logs alloy
 
 # Test Loki query in Grafana Explore
 ```

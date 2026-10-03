@@ -9,7 +9,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 - **Modular Design**: Each service is self-contained with its own configuration
 - **Network Monitoring**: ntopng for deep packet inspection and network analysis
 - **Container Metrics**: Full Docker container and host resource monitoring
-- **Log Aggregation**: Centralized logging with Loki and Promtail
+- **Log Aggregation**: Centralized logging with Loki and Grafana Alloy
 - **Media Streaming**: Integrated Jellyfin media server
 - **Easy Management**: Portainer for container management, Nginx Proxy Manager for reverse proxy
 
@@ -19,7 +19,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 - **Grafana** - Unified visualization and dashboards
 - **Loki** - Log aggregation and querying
 - **Prometheus** - Metrics storage and alerting
-- **Promtail** - Log collection from containers and system
+- **Alloy** - Log collection from containers (Docker API), `/var/log` and journald
 - **Tempo** - Distributed trace storage (fed by the OpenTelemetry Collector)
 - **OpenTelemetry Collector** - Unified telemetry pipeline
 
@@ -273,14 +273,14 @@ docker compose restart [service-name]
 
 ### Loki Not Receiving Logs
 
-1. Check Promtail is running:
+1. Check Alloy is running:
    ```bash
-   docker compose ps promtail
+   docker compose ps alloy
    ```
 
-2. Check Promtail logs:
+2. Check Alloy logs (component health is also in the UI at `localhost:12345`):
    ```bash
-   docker compose logs promtail
+   docker compose logs alloy
    ```
 
 3. Verify Loki endpoint in Grafana datasources

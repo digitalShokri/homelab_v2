@@ -153,7 +153,7 @@ docker compose logs -f
  ✔ Container grafana               Started
  ✔ Container prometheus            Started
  ✔ Container loki                  Started
- ✔ Container promtail              Started
+ ✔ Container alloy                 Started
  ✔ Container otel-collector        Started
  ✔ Container node-exporter         Started
  ✔ Container cadvisor              Started
