@@ -1,4 +1,4 @@
-// Grafana Alloy: log shipping for homelab_v2 (replaced Promtail).
+// Grafana Alloy: log shipping for homelab_v2 (replaced Promtail 2026-10-03).
 // LABEL CONTRACT: names and values must stay identical to the Promtail
 // output. Consumers: 404ambitions dashboard ({project="404ambitions"}),
 // Tempo traces->logs (service.name -> service), Lab-addon-n8n
@@ -56,7 +56,7 @@ loki.source.docker "containers" {
 	targets          = discovery.docker.containers.targets
 	relabel_rules    = discovery.relabel.docker.rules
 	refresh_interval = "5s"
-	forward_to       = [loki.process.cutover_guard.receiver]
+	forward_to       = [loki.write.local.receiver]
 }
 
 // ---------------------------------------------------------------------------
@@ -70,9 +70,7 @@ loki.source.file "varlogs" {
 	}]
 	// tail_from_end only applies to files with no stored position.
 	tail_from_end = true
-	// Cut-over only: import Promtail's file offsets. Remove after acceptance.
-	legacy_positions_file = "/var/lib/alloy/data/promtail-positions.yaml"
-	forward_to            = [loki.process.cutover_guard.receiver]
+	forward_to    = [loki.write.local.receiver]
 
 	file_match {
 		enabled     = true
@@ -90,9 +88,7 @@ loki.source.file "syslog" {
 	}]
 	// tail_from_end only applies to files with no stored position.
 	tail_from_end = true
-	// Cut-over only: import Promtail's file offsets. Remove after acceptance.
-	legacy_positions_file = "/var/lib/alloy/data/promtail-positions.yaml"
-	forward_to            = [loki.process.cutover_guard.receiver]
+	forward_to    = [loki.write.local.receiver]
 
 	file_match {
 		enabled     = true
@@ -140,19 +136,6 @@ loki.process "conky" {
 		stage.output {
 			source = "message"
 		}
-	}
-	forward_to = [loki.process.cutover_guard.receiver]
-}
-
-// ---------------------------------------------------------------------------
-// Cut-over guard: drop Docker/journal backfill on first start (section 5).
-// Remove after acceptance (commit 2), or it will also drop real backlog
-// after any Alloy outage longer than older_than.
-// ---------------------------------------------------------------------------
-loki.process "cutover_guard" {
-	stage.drop {
-		older_than          = "5m"
-		drop_counter_reason = "alloy_cutover_backfill"
 	}
 	forward_to = [loki.write.local.receiver]
 }
