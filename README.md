@@ -254,11 +254,10 @@ docker compose restart [service-name]
    ip a
    ```
 
-2. Update `NETWORK_INTERFACE` in `.env`
+2. Update `NETWORK_INTERFACE` in `.env` (one interface name)
 
-3. Ensure ntopng has proper capabilities:
+3. Recreate ntopng (`restart` does not re-read `.env`):
    ```bash
-   docker compose down
    docker compose up -d ntopng
    ```
 

@@ -63,7 +63,7 @@ include:
 ### Environment Variables (`.env`)
 All environment-specific configuration. Key variables:
 - `SERVER_IP`: Server IP address
-- `NETWORK_INTERFACE`: Interface for ntopng (e.g., eth0)
+- `NETWORK_INTERFACE`: LAN interface for ntopng to capture (one name, e.g. eno1)
 - `GRAFANA_ADMIN_PASSWORD`: Grafana admin password
 - `MEDIA_*`: Media paths for Jellyfin
 - `PUID`/`PGID`: User/group IDs
@@ -100,7 +100,11 @@ All environment-specific configuration. Key variables:
 - **Telemetry endpoint**: `:8888` (collector's own metrics)
 
 ### ntopng (`ntopng/config/ntopng.conf`)
-- **Interface**: Configured via `NETWORK_INTERFACE` env var
+- **Interfaces**: `-i ${NETWORK_INTERFACE}` and `-i br-monitoring`, set in the
+  `command:` of `ntopng/docker-compose.yml` (ntopng does not expand `${...}`
+  in `ntopng.conf`)
+- **Port**: `--http-port=3000` in `ntopng.conf`. Host network mode, so there is
+  no `ports:` mapping; it listens on 3000 on every host interface, no login
 - **Storage**: RRD files + SQLite (local, no external DB)
 - **Runs in host network mode**: Required for packet capture
 - **Data dir**: `ntopng/data/` and `ntopng/lib/`
@@ -270,9 +274,9 @@ docker compose restart [service-name]
    NETWORK_INTERFACE=ens18  # Your interface
    ```
 
-3. Restart ntopng:
+3. Recreate ntopng (`restart` does not re-read `.env`):
    ```bash
-   docker compose restart ntopng
+   docker compose up -d ntopng
    ```
 
 ## Data Flow Understanding
@@ -305,7 +309,7 @@ Tempo metrics generator → Prometheus (remote write) → service graph, span me
 
 ### How Network Monitoring Works
 ```
-Network packets → ntopng (captures via eth0 in host mode) →
+Network packets → ntopng (captures $NETWORK_INTERFACE and br-monitoring in host mode) →
 RRD/SQLite (stores) → ntopng Web UI (displays)
 ```
 
@@ -330,7 +334,7 @@ RRD/SQLite (stores) → ntopng Web UI (displays)
 
 ### Docker Network
 - **Name**: `monitoring`
-- **Type**: bridge
+- **Type**: bridge (host-side bridge name `br-monitoring`, captured by ntopng)
 - **Subnet**: 172.20.0.0/16
 - **Usage**: All services except ntopng
 
@@ -407,7 +411,7 @@ docker compose ps [service-name]
    ```bash
    docker inspect ntopng | grep -A 10 CapAdd
    ```
-4. Restart: `docker compose restart ntopng`
+4. Recreate: `docker compose up -d ntopng`
 
 ### OTEL Collector Not Working
 1. Check OTEL Collector logs: `docker compose logs otel-collector`

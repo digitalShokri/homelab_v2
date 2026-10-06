@@ -45,7 +45,7 @@ include:
         ▼                    ▼                    ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │   Grafana    │    │  Portainer   │    │   Jellyfin   │
-│   :3000      │    │   :9000      │    │   :8096      │
+│   :3002      │    │   :9000      │    │   :8096      │
 └──────┬───────┘    └──────────────┘    └──────────────┘
        │
        │ Queries
@@ -84,7 +84,7 @@ include:
                     ▼
             ┌──────────────┐
             │    ntopng    │
-            │    :3001     │
+            │    :3000     │
             │  (host mode) │
             └──────────────┘
 ```
@@ -282,11 +282,11 @@ Applications
 
 **Exposed Services** (accessible from LAN):
 - Landing Page (port 80)
-- Grafana (port 3000)
+- Grafana (port 3002)
 - Prometheus (port 9090)
 - Portainer (port 9000)
 - Jellyfin (port 8096)
-- ntopng (port 3001)
+- ntopng (port 3000)
 - cAdvisor (port 8080)
 - NPM (port 81)
 

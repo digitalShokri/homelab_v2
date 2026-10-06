@@ -32,6 +32,9 @@ networks:
   monitoring:
     name: monitoring
     driver: bridge
+    # Fixed host-side bridge name so ntopng (host network mode) can capture it
+    driver_opts:
+      com.docker.network.bridge.name: br-monitoring
     ipam:
       config:
         - subnet: 172.20.0.0/16

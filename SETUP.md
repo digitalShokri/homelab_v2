@@ -84,7 +84,8 @@ nano .env
 # Your server's IP address (find with: ip a)
 SERVER_IP=192.168.1.100
 
-# Network interface for ntopng (find with: ip a)
+# Network interface for ntopng (find with: ip a). One name only;
+# the monitoring bridge (br-monitoring) is captured automatically.
 # Usually: eth0, ens18, enp0s3, etc.
 NETWORK_INTERFACE=eth0
 
@@ -182,7 +183,7 @@ docker compose logs [service-name]
    - Should show dashboard with all services
 
 2. **Grafana**
-   - URL: http://YOUR_SERVER_IP:3000
+   - URL: http://YOUR_SERVER_IP:3002
    - Login: admin / (password from .env)
    - Datasources should be auto-configured
 
@@ -247,7 +248,7 @@ docker compose restart [service-name]
 
 ### Configure ntopng
 
-1. Access ntopng: http://YOUR_SERVER_IP:3001
+1. Access ntopng: http://YOUR_SERVER_IP:3000
 2. Configure local networks if needed:
    - Go to Settings → Preferences
    - Set local networks (e.g., 192.168.0.0/16)

@@ -3,17 +3,21 @@ services:
     image: ntop/ntopng:latest
     container_name: ntopng
     restart: unless-stopped
-    ports:
-      - "3001:3000"
     volumes:
       - ./config/ntopng.conf:/etc/ntopng/ntopng.conf
       - ./data:/var/lib/ntopng
+    # Interfaces live here, not in ntopng.conf: Compose interpolates ${...}
+    # in this file, ntopng does not in its config. Changing NETWORK_INTERFACE
+    # needs `docker compose up -d ntopng` (restart does not re-read .env).
+    # br-monitoring is the monitoring network's bridge (docker-compose.yml).
     command:
       - "-i"
-      - "eno1"
+      - "${NETWORK_INTERFACE:-eth0}"
       - "-i"
-      - "docker0"
+      - "br-monitoring"
       - "/etc/ntopng/ntopng.conf"
+    # Host mode: published ports do not apply; the UI listens on host port
+    # 3000 on all interfaces (--http-port in ntopng.conf).
     network_mode: host
     cap_add:
       - NET_ADMIN

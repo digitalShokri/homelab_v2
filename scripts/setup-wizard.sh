@@ -201,11 +201,6 @@ main_setup() {
 
     get_input "Log retention period (hours)" "720" LOKI_RETENTION_HOURS
 
-    # ntopng Configuration
-    print_section "ntopng Configuration"
-
-    get_input "ntopng HTTP port" "3001" NTOPNG_HTTP_PORT
-
     # Jellyfin Configuration
     print_section "Jellyfin Configuration"
 
@@ -259,11 +254,6 @@ PROMETHEUS_RETENTION=${PROMETHEUS_RETENTION}
 # LOKI CONFIGURATION
 # ============================================
 LOKI_RETENTION_PERIOD=${LOKI_RETENTION_HOURS}h
-
-# ============================================
-# NTOPNG CONFIGURATION
-# ============================================
-NTOPNG_HTTP_PORT=${NTOPNG_HTTP_PORT}
 
 # ============================================
 # JELLYFIN CONFIGURATION
