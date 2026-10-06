@@ -29,7 +29,7 @@ docker compose up -d
 ## What You Get
 
 ### Observability Stack (Grafana LGTM)
-- **Grafana** (http://YOUR_IP:3000) - Unified dashboards for logs and metrics
+- **Grafana** (http://YOUR_IP:3002) - Unified dashboards for logs and metrics
 - **Prometheus** (http://YOUR_IP:9090) - Metrics collection and alerting
 - **Loki** (http://YOUR_IP:3100) - Log aggregation
 - **Alloy** - Automatic log collection from all containers, `/var/log` and journald
@@ -38,7 +38,7 @@ docker compose up -d
 ### System Monitoring
 - **Node Exporter** - CPU, memory, disk, network metrics
 - **cAdvisor** - Per-container resource usage
-- **ntopng** (http://YOUR_IP:3001) - Network traffic analysis
+- **ntopng** (http://YOUR_IP:3000) - Network traffic analysis
 
 ### Management Tools
 - **Portainer** (http://YOUR_IP:9000) - Docker management UI
@@ -46,6 +46,9 @@ docker compose up -d
 
 ### Bonus: Media Streaming
 - **Jellyfin** (http://YOUR_IP:8096) - Personal media server
+
+### Optional Add-ons (off by default)
+- **n8n** (http://YOUR_IP:5678) - Workflow automation. Enable with `make n8n-enable`
 
 ## Setup Options
 
@@ -105,14 +108,14 @@ docker compose logs -f
 1. **Landing Page**: http://YOUR_IP
    - Shows all services with quick links
 
-2. **Grafana**: http://YOUR_IP:3000
+2. **Grafana**: http://YOUR_IP:3002
    - Login: admin / (password from .env)
    - Datasources are pre-configured
    - Import recommended dashboards (see README.md)
 
 3. **Prometheus**: http://YOUR_IP:9090
    - Go to Status → Targets
-   - All targets should show "UP"
+   - All targets should show "UP" (`n8n` stays down unless that add-on is enabled)
 
 4. **Portainer**: http://YOUR_IP:9000
    - Create admin account on first visit
@@ -120,6 +123,9 @@ docker compose logs -f
 5. **Nginx Proxy Manager**: http://YOUR_IP:81
    - Login: admin@example.com / changeme
    - **IMPORTANT**: Change password immediately!
+
+6. **n8n** (if enabled): http://YOUR_IP:5678
+   - Create the owner account on first visit
 
 ## Key Configuration Files
 
@@ -174,6 +180,7 @@ docker compose ps
 | Nginx Proxy Manager | admin@example.com | changeme |
 | Portainer | - | Create on first visit |
 | Jellyfin | - | Create on first visit |
+| n8n (add-on) | - | Create owner on first visit |
 
 ## Quick Troubleshooting
 

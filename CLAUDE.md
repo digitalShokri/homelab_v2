@@ -58,6 +58,11 @@ include:
 - **Jellyfin** (port 8096): Media streaming server
 - **Landing Page** (port 80): Custom service dashboard
 
+### Optional Add-ons (Compose profiles, off by default)
+- **n8n** (port 5678, profile `n8n`): Workflow automation. SQLite in
+  `n8n/data/` (UID 1000). Enable with `make n8n-enable`; see "Optional Add-ons"
+  below.
+
 ## Key Configuration Files
 
 ### Environment Variables (`.env`)
@@ -67,6 +72,9 @@ All environment-specific configuration. Key variables:
 - `GRAFANA_ADMIN_PASSWORD`: Grafana admin password
 - `MEDIA_*`: Media paths for Jellyfin
 - `PUID`/`PGID`: User/group IDs
+- `COMPOSE_PROFILES`: Optional add-ons to start (e.g. `n8n`; empty = none)
+- `N8N_ENCRYPTION_KEY`: Encrypts n8n's saved credentials. Never change it once
+  set, and back it up.
 
 ### Prometheus (`prometheus/config/prometheus.yml`)
 - **Scrape configs**: Defines what to monitor
@@ -211,6 +219,32 @@ docker compose restart [service-name]
 
 6. Update landing page if user-facing service
 
+### Optional Add-ons
+
+An add-on is a normal service directory whose service has
+`profiles: ["<name>"]`. It is listed under `include:` like the rest, but only
+starts when `<name>` is in `COMPOSE_PROFILES` in `.env`. n8n is the reference
+example:
+
+```bash
+make n8n-enable    # add n8n to COMPOSE_PROFILES, generate N8N_ENCRYPTION_KEY, start
+make n8n-disable   # stop + remove the container; n8n/data/ and the key are kept
+```
+
+- No `${VAR:?}` in add-on compose files. Compose checks it even with the
+  profile off, which breaks every `docker compose` command.
+- Removing a profile doesn't stop the container. Use
+  `docker compose --profile <name> stop <service>`, which is what the disable
+  target does.
+- Add-on Prometheus jobs are static targets, so they show down while the add-on
+  is disabled. Don't add `absent()`/`up == 0` alerts for them. (`dns_sd`
+  avoids the down target but logs an ERROR every refresh.)
+- Wire the add-on into `setup.sh` (`create_data_dir`), `fix-permissions.sh`
+  (`fix_data_dir`), the wizard's "Optional Add-ons" section, `.env.example`
+  and the landing page.
+- n8n logs carry `project="homelab_v2"` and `service="n8n"` (Alloy label
+  contract).
+
 ### Adding Prometheus Alerts
 
 1. Edit `prometheus/config/rules/alerts.yml`
@@ -329,6 +363,7 @@ RRD/SQLite (stores) → ntopng Web UI (displays)
 - `jellyfin/config/` - Jellyfin metadata
 - `nginx-proxy-manager/data/` - NPM configs
 - `nginx-proxy-manager/letsencrypt/` - SSL certificates
+- `n8n/data/` - n8n workflows, credentials, SQLite DB (included in `make backup`)
 
 ## Networking
 
@@ -373,6 +408,7 @@ Services communicate by container name (Docker DNS):
 | NPM | 443 | HTTPS | Yes |
 | Jellyfin | 8096 | HTTP | Yes |
 | NVIDIA GPU Exporter | 9445 | HTTP | Internal |
+| n8n (add-on) | 5678 | HTTP | Yes (when enabled) |
 
 ## Troubleshooting Common Issues
 
@@ -426,6 +462,7 @@ docker compose ps [service-name]
 - NPM: `admin@example.com` / `changeme` (CHANGE IMMEDIATELY!)
 - Portainer: Create on first visit
 - Jellyfin: Create on first visit
+- n8n (add-on): Create owner on first visit
 
 ### No Authentication (Internal Only)
 - Prometheus

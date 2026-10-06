@@ -217,6 +217,10 @@ create_data_dir "loki" "10001" "10001" "Loki default user"
 # Tempo - runs as UID 10001
 create_data_dir "tempo" "10001" "10001" "Tempo default user"
 
+# n8n (optional add-on) - image runs as node (UID 1000), ignores PUID/PGID.
+# Created even when the profile is off so enabling it later just works.
+create_data_dir "n8n" "1000" "1000" "n8n node user"
+
 # Alloy - runs as root (reads docker.sock and /var/log)
 create_data_dir "alloy" "0" "0" "Root (Alloy reads docker.sock and /var/log)"
 
@@ -328,6 +332,7 @@ echo "• Grafana runs as UID 472 (data owned by 472:472)"
 echo "• Prometheus runs as UID 65534 (data owned by nobody:nogroup)"
 echo "• Loki runs as UID 10001 (data owned by 10001:10001)"
 echo "• ntopng runs as UID 997 (data owned by 997:990)"
+echo "• n8n (optional add-on) runs as UID 1000 (data owned by 1000:1000)"
 echo "• Jellyfin uses PUID/PGID from .env (currently $USER_UID:$USER_GID)"
 echo "• Other services run as root or use host user permissions"
 echo ""

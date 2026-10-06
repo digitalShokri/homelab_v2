@@ -1,8 +1,8 @@
 // Grafana Alloy: log shipping for homelab_v2 (replaced Promtail 2026-10-03).
 // LABEL CONTRACT: names and values must stay identical to the Promtail
 // output. Consumers: 404ambitions dashboard ({project="404ambitions"}),
-// Tempo traces->logs (service.name -> service), Lab-addon-n8n
-// ({project="lab-addon-n8n"}), job=varlogs|syslog|conky.
+// Tempo traces->logs (service.name -> service), the n8n add-on
+// ({project="homelab_v2", service="n8n"}), job=varlogs|syslog|conky.
 // Do not rewrite log lines either: Loki's TraceID derived field reads them.
 
 logging {

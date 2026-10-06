@@ -37,6 +37,10 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
 - **Jellyfin** - Personal media streaming server
 - **Landing Page** - Custom dashboard for all services
 
+### Optional Add-ons
+Off by default. Each is a Compose profile, enabled through `COMPOSE_PROFILES` in `.env`.
+- **n8n** - Workflow automation (profile `n8n`, port 5678)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -69,6 +73,7 @@ A modern, modular monitoring stack built with OpenTelemetry and the Grafana LGTM
    - `NETWORK_INTERFACE`: Your network interface (find with `ip a`)
    - `GRAFANA_ADMIN_PASSWORD`: Set a secure password
    - `MEDIA_*`: Paths to your media directories (for Jellyfin)
+   - `COMPOSE_PROFILES`: Optional add-ons to start (e.g. `n8n`; empty = none)
 
 4. **Start the stack**
    ```bash
@@ -102,6 +107,7 @@ Once deployed, access services at:
 | **ntopng** | http://192.168.1.241:3000 | No login required |
 | **cAdvisor** | http://192.168.1.241:8080 | - |
 | **NVIDIA GPU Exporter** | http://192.168.1.241:9445/metrics | - |
+| **n8n** (add-on) | http://192.168.1.241:5678 | Create owner on first visit |
 
 ## 📊 Post-Deployment Configuration
 
@@ -176,6 +182,21 @@ docker run --rm -v $(pwd)/grafana/data:/data -v $(pwd)/backups:/backup alpine ta
 docker run --rm -v $(pwd)/prometheus/data:/data -v $(pwd)/backups:/backup alpine tar czf /backup/prometheus-$(date +%Y%m%d).tar.gz /data
 ```
 
+### Optional Add-ons
+
+Add-ons are services that only start when their Compose profile is listed in
+`COMPOSE_PROFILES` in `.env`. Plain `docker compose up -d` then includes them.
+
+```bash
+make n8n-enable     # adds n8n to COMPOSE_PROFILES, creates N8N_ENCRYPTION_KEY, starts it
+make n8n-disable    # stops and removes the container; n8n/data/ and the key are kept
+```
+
+n8n stores workflows, credentials and its SQLite DB in `n8n/data/` (owned by
+UID 1000). `N8N_ENCRYPTION_KEY` in `.env` encrypts saved credentials: back it
+up and never change it, or saved credentials become unreadable. `make backup`
+includes `n8n/data/`.
+
 ## 📁 Directory Structure
 
 ```
@@ -200,6 +221,10 @@ homelab-monitoring/
 ├── otel-collector/             # OpenTelemetry service
 │   ├── docker-compose.yml
 │   └── config/
+│
+├── n8n/                        # Optional add-on (profile "n8n")
+│   ├── docker-compose.yml
+│   └── data/                   # Workflows, credentials, SQLite DB
 │
 └── [other services...]
 ```

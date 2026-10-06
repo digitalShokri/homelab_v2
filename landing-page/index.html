@@ -116,6 +116,7 @@
         .nginx { background: linear-gradient(45deg, #009639, #00C851); }
         .otel { background: linear-gradient(45deg, #425CC7, #3142A5); }
         .nvidia { background: linear-gradient(45deg, #76B900, #5A9100); }
+        .n8n { background: linear-gradient(45deg, #EA4B71, #C2185B); }
 
         .service-title {
             font-size: 1.5rem;
@@ -186,7 +187,7 @@
                 <div class="info-label">Server IP</div>
             </div>
             <div class="info-item">
-                <div class="info-value">10</div>
+                <div class="info-value" id="service-count">Loading...</div>
                 <div class="info-label">Services</div>
             </div>
             <div class="info-item">
@@ -279,6 +280,14 @@
                 <div class="service-description">GPU metrics for Prometheus monitoring</div>
                 <div class="service-url">:9445</div>
             </a>
+
+            <a href="" class="service-card" id="n8n-card">
+                <div class="status-indicator"></div>
+                <div class="service-icon n8n">🔀</div>
+                <div class="service-title">n8n (add-on)</div>
+                <div class="service-description">Workflow automation. Only running when enabled (make n8n-enable)</div>
+                <div class="service-url">:5678</div>
+            </a>
         </div>
 
         <div class="footer">
@@ -289,6 +298,7 @@
     <script>
         // Get server IP from window location
         document.getElementById('server-ip').textContent = window.location.hostname;
+        document.getElementById('service-count').textContent = document.querySelectorAll('.service-card').length;
 
         // Update current time
         function updateTime() {
@@ -310,7 +320,8 @@
                 { selector: '#ntopng-card', port: '3000' },
                 { selector: '#cadvisor-card', port: '8080' },
                 { selector: '#nginx-card', port: '81' },
-                { selector: '#nvidia-card', port: '9445' }
+                { selector: '#nvidia-card', port: '9445' },
+                { selector: '#n8n-card', port: '5678' }
             ];
 
             services.forEach(service => {

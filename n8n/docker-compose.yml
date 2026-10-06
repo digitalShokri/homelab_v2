@@ -1,0 +1,42 @@
+# n8n workflow automation - OPTIONAL ADD-ON
+# Only starts when the "n8n" profile is active: set COMPOSE_PROFILES=n8n in
+# .env (or run `make n8n-enable`). With the profile off, `docker compose up -d`
+# skips it.
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.42.3
+    container_name: n8n
+    profiles: ["n8n"]
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      # Workflows, credentials and the SQLite DB. Image runs as UID 1000 (node)
+      # and ignores PUID/PGID, so this dir must be owned by 1000:1000.
+      - ./data:/home/node/.n8n
+    environment:
+      # Encrypts stored credentials. Losing or changing it makes them
+      # unreadable: back it up with the rest of .env. Not `:?` (required):
+      # Compose checks that even when the profile is off. If empty, n8n
+      # generates a key into data/config; setting a different one later
+      # fails with "Mismatching encryption keys".
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-}
+      - GENERIC_TIMEZONE=${TZ:-America/New_York}
+      - TZ=${TZ:-America/New_York}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://${SERVER_IP:-localhost}:5678/
+      # Plain HTTP on the LAN: secure cookies would block login
+      - N8N_SECURE_COOKIE=false
+      # Prometheus scrapes /metrics (job "n8n" in prometheus.yml)
+      - N8N_METRICS=true
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_RUNNERS_ENABLED=true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - monitoring

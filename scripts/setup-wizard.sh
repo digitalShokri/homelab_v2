@@ -223,6 +223,24 @@ main_setup() {
         JELLYFIN_PUBLISHED_URL="http://${SERVER_IP}:8096"
     fi
 
+    # Optional add-ons (Compose profiles)
+    print_section "Optional Add-ons"
+
+    COMPOSE_PROFILES=""
+    # Keep an existing key: the .env is rewritten below, and a new key would
+    # make n8n's saved credentials unreadable
+    N8N_ENCRYPTION_KEY=$(grep -s '^N8N_ENCRYPTION_KEY=' "$PROJECT_ROOT/.env" | cut -d= -f2-)
+
+    read -p "Enable n8n workflow automation (port 5678)? (y/N): " enable_n8n
+
+    if [[ $enable_n8n =~ ^[Yy]$ ]]; then
+        COMPOSE_PROFILES="n8n"
+        if [ -z "$N8N_ENCRYPTION_KEY" ]; then
+            N8N_ENCRYPTION_KEY=$(openssl rand -hex 32)
+            echo -e "${GREEN}✓${NC} Generated N8N_ENCRYPTION_KEY (back up your .env)"
+        fi
+    fi
+
     # Generate .env file
     print_section "Generating Configuration"
 
@@ -268,6 +286,13 @@ MEDIA_PHOTOS=${MEDIA_PHOTOS}
 # OPENTELEMETRY COLLECTOR
 # ============================================
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+
+# ============================================
+# OPTIONAL ADD-ONS
+# ============================================
+# Comma-separated Compose profiles to start. Available: n8n
+COMPOSE_PROFILES=${COMPOSE_PROFILES}
+N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
 EOF
 
     echo -e "${GREEN}✓${NC} Created .env file"
@@ -281,6 +306,7 @@ EOF
     echo -e "Grafana Admin:       ${BLUE}${GRAFANA_ADMIN_USER}${NC}"
     echo -e "Prometheus Retention:${BLUE}${PROMETHEUS_RETENTION}${NC}"
     echo -e "Loki Retention:      ${BLUE}${LOKI_RETENTION_HOURS}h${NC}"
+    echo -e "Add-ons:             ${BLUE}${COMPOSE_PROFILES:-none}${NC}"
     echo ""
 
     # Next steps
@@ -297,10 +323,17 @@ EOF
     echo -e "   ${BLUE}http://${SERVER_IP}${NC}"
     echo ""
     echo "4. Access Grafana:"
-    echo -e "   ${BLUE}http://${SERVER_IP}:3000${NC}"
+    echo -e "   ${BLUE}http://${SERVER_IP}:3002${NC}"
     echo -e "   Username: ${GRAFANA_ADMIN_USER}"
     echo -e "   Password: (see .env file)"
     echo ""
+
+    if [[ ",$COMPOSE_PROFILES," == *",n8n,"* ]]; then
+        echo "5. Access n8n (create the owner account on first visit):"
+        echo -e "   ${BLUE}http://${SERVER_IP}:5678${NC}"
+        echo -e "   n8n/data must be owned by 1000:1000: ${BLUE}sudo ./setup.sh${NC} handles it"
+        echo ""
+    fi
 
     # Offer to start services
     read -p "Start services now? (y/N): " start_services

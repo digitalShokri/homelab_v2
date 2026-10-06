@@ -207,6 +207,7 @@ Applications
 | Tempo | Prometheus | HTTP | 9090 | Remote write (span metrics) |
 | Applications | OTEL Collector | gRPC | 4317 | Send telemetry |
 | Applications | OTEL Collector | HTTP | 4318 | Send telemetry |
+| Prometheus | n8n (add-on) | HTTP | 5678 | Scrape metrics (`/metrics`) |
 | Landing Page | All Services | HTTP | Various | Reverse proxy |
 
 ## Storage Strategy
@@ -224,6 +225,7 @@ Applications
 | Portainer | JSON | `portainer/data/` | Config | Persistent |
 | Jellyfin | SQLite + Files | `jellyfin/config/` | Media metadata | Persistent |
 | NPM | SQLite | `nginx-proxy-manager/data/` | Proxy configs | Persistent |
+| n8n (add-on) | SQLite + Files | `n8n/data/` (UID 1000) | Workflows, credentials, executions | Persistent |
 
 ### Data Retention
 
@@ -249,6 +251,8 @@ Applications
 - Prometheus data (optional): `prometheus/data/`
 - Jellyfin metadata: `jellyfin/config/`
 - NPM configurations: `nginx-proxy-manager/data/`
+- n8n workflows and credentials (if enabled): `n8n/data/`, plus
+  `N8N_ENCRYPTION_KEY` in `.env` (without it the credentials can't be decrypted)
 - All `*/config/` directories
 
 **Non-Critical Data** (can be regenerated):
@@ -266,6 +270,7 @@ Applications
 | Portainer | Username/Password | Create on first visit | MFA available |
 | NPM | Username/Password | admin@example.com / changeme | **Change immediately!** |
 | Jellyfin | Username/Password | Create on first visit | Optional |
+| n8n (add-on) | Username/Password | Create owner on first visit | Plain HTTP on LAN (`N8N_SECURE_COOKIE=false`) |
 | Prometheus | None | - | Add auth via NPM |
 | Loki | None | - | Internal only |
 | Tempo | None | - | Internal only (no host ports) |
@@ -289,6 +294,7 @@ Applications
 - ntopng (port 3000)
 - cAdvisor (port 8080)
 - NPM (port 81)
+- n8n (port 5678, only when the add-on is enabled)
 
 **SSL/TLS**:
 - Use Nginx Proxy Manager for SSL termination
@@ -356,6 +362,21 @@ sudo ufw enable
 5. If exposing metrics: Add scrape job to Prometheus
 6. If generating logs: Alloy auto-discovers Docker logs
 7. Update landing page if user-facing
+
+### Optional Add-ons (Compose profiles)
+
+A service that should be opt-in follows the same layout, plus
+`profiles: ["<name>"]` on the service in its compose file. It is still listed
+under `include:`, but Compose only starts it when `<name>` is in
+`COMPOSE_PROFILES` in `.env`. n8n (`n8n/docker-compose.yml`) is the reference
+example, with `make n8n-enable` / `make n8n-disable`.
+
+- Don't use `${VAR:?}` (required) in an add-on's compose file. Compose checks
+  it even when the profile is off, which breaks `docker compose` for everyone.
+- Removing a profile doesn't stop a running container. Stop it with
+  `docker compose --profile <name> stop <service>`.
+- A static Prometheus target for an add-on shows as down while it's disabled,
+  so don't add `absent()` or `up == 0` alerts for it.
 
 ### Adding Custom Metrics
 

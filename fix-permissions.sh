@@ -93,6 +93,9 @@ fix_data_dir "loki" "10001" "10001" "Loki user"
 # Tempo - UID 10001
 fix_data_dir "tempo" "10001" "10001" "Tempo user"
 
+# n8n (optional add-on) - UID 1000 (node), ignores PUID/PGID
+fix_data_dir "n8n" "1000" "1000" "n8n node user"
+
 # Alloy - runs as root (docker.sock, /var/log)
 fix_data_dir "alloy" "0" "0" "Root (docker.sock, /var/log)"
 

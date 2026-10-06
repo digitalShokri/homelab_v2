@@ -57,6 +57,9 @@ alloy/data/
 ntopng/data/
 ntopng/lib/
 
+# n8n (optional add-on)
+n8n/data/
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -24,6 +24,9 @@ include:
   # Media & Applications
   - path: ./jellyfin/docker-compose.yml
 
+  # Optional add-ons: only start when their profile is in COMPOSE_PROFILES (.env)
+  - path: ./n8n/docker-compose.yml   # profile: n8n
+
   # Landing Page
   - path: ./landing-page/docker-compose.yml
 

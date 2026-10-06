@@ -108,6 +108,13 @@ MEDIA_PHOTOS=/media/photos
 
 # Timezone
 TZ=America/New_York
+
+# Optional add-ons (Compose profiles). Empty = core stack only.
+# To enable n8n, set COMPOSE_PROFILES=n8n and generate a key once:
+#   openssl rand -hex 32
+# (or leave both empty and run `make n8n-enable` later)
+COMPOSE_PROFILES=
+N8N_ENCRYPTION_KEY=
 ```
 
 ### Step 3: Verify Network Interface
@@ -189,7 +196,7 @@ docker compose logs [service-name]
 
 3. **Prometheus**
    - URL: http://YOUR_SERVER_IP:9090
-   - Check Status → Targets (all should be "UP")
+   - Check Status → Targets (all "UP"; `n8n` is down while that add-on is disabled)
 
 4. **Portainer**
    - URL: http://YOUR_SERVER_IP:9000
@@ -199,6 +206,10 @@ docker compose logs [service-name]
    - URL: http://YOUR_SERVER_IP:81
    - Login: admin@example.com / changeme
    - **Change password immediately!**
+
+6. **n8n** (only if the `n8n` add-on is enabled)
+   - URL: http://YOUR_SERVER_IP:5678
+   - Create the owner account on first visit
 
 ## Post-Installation Configuration
 
@@ -265,6 +276,24 @@ docker compose restart [service-name]
      - Photos: /media/photos
 3. Configure hardware acceleration if available (Intel QSV, NVIDIA, etc.)
 
+### Configure n8n (Optional Add-on)
+
+n8n is off by default. It is a Compose profile, so it only starts when `n8n`
+is in `COMPOSE_PROFILES` in `.env`.
+
+1. Enable it: `make n8n-enable`. This adds the profile, generates
+   `N8N_ENCRYPTION_KEY` if it is missing, and starts the container.
+2. Make sure `n8n/data/` is owned by UID 1000 (`sudo ./setup.sh` or
+   `sudo ./fix-permissions.sh` does this).
+3. Open http://YOUR_SERVER_IP:5678 and create the owner account.
+4. Back up `N8N_ENCRYPTION_KEY` with your `.env`. If it changes, saved
+   credentials can no longer be decrypted.
+5. Webhooks use `http://SERVER_IP:5678/` (LAN only). For public webhooks, add
+   an NPM proxy host with TLS and set `WEBHOOK_URL` in `n8n/docker-compose.yml`.
+
+To turn it off: `make n8n-disable`. The container is removed, but
+`n8n/data/` and the key are kept.
+
 ### Configure Nginx Proxy Manager
 
 1. Access NPM: http://YOUR_SERVER_IP:81
@@ -293,6 +322,7 @@ docker compose restart [service-name]
 - [ ] Portainer accessible
 - [ ] Nginx Proxy Manager accessible
 - [ ] Jellyfin accessible (if configured)
+- [ ] n8n accessible on :5678 and Prometheus `n8n` target "UP" (if enabled)
 
 ## Firewall Configuration
 
@@ -307,8 +337,9 @@ sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
 # Allow specific service ports (optional - for direct access)
-sudo ufw allow 3000/tcp  # Grafana
+sudo ufw allow 3002/tcp  # Grafana
 sudo ufw allow 9000/tcp  # Portainer
+sudo ufw allow 5678/tcp  # n8n (if enabled)
 
 # Enable firewall
 sudo ufw enable
@@ -360,6 +391,9 @@ docker run --rm -v $(pwd)/grafana/data:/data -v $BACKUP_DIR:/backup alpine tar c
 
 # Backup Prometheus
 docker run --rm -v $(pwd)/prometheus/data:/data -v $BACKUP_DIR:/backup alpine tar czf /backup/prometheus.tar.gz /data
+
+# Backup n8n (if enabled): workflows, credentials, SQLite DB
+[ -d n8n/data ] && tar czf $BACKUP_DIR/n8n.tar.gz n8n/data
 
 # Backup configurations
 tar czf $BACKUP_DIR/configs.tar.gz */config/ .env
