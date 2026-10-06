@@ -236,12 +236,8 @@ for dir in data letsencrypt; do
     chmod -R 755 "$full_dir"
 done
 
-# ntopng - runs as root in host mode
-if [ ! -d "$SCRIPT_DIR/ntopng/data" ]; then
-    echo -e "${YELLOW}Creating:${NC} ntopng/data/ (owner: root)"
-    mkdir -p "$SCRIPT_DIR/ntopng/data"
-fi
-chmod -R 755 "$SCRIPT_DIR/ntopng/data"
+# ntopng - starts as root, drops privileges to ntopng (UID 997, GID 990)
+create_data_dir "ntopng" "997" "990" "ntopng user"
 
 # Jellyfin - uses PUID/PGID from .env
 for dir in config cache; do
@@ -331,6 +327,7 @@ echo -e "${BLUE}Permission Notes:${NC}"
 echo "• Grafana runs as UID 472 (data owned by 472:472)"
 echo "• Prometheus runs as UID 65534 (data owned by nobody:nogroup)"
 echo "• Loki runs as UID 10001 (data owned by 10001:10001)"
+echo "• ntopng runs as UID 997 (data owned by 997:990)"
 echo "• Jellyfin uses PUID/PGID from .env (currently $USER_UID:$USER_GID)"
 echo "• Other services run as root or use host user permissions"
 echo ""

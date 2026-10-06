@@ -131,12 +131,8 @@ for dir in data letsencrypt; do
     fi
 done
 
-# ntopng
-if [ -d "$SCRIPT_DIR/ntopng/data" ]; then
-    echo -e "${YELLOW}Fixing:${NC} ntopng/data/ → 755 permissions"
-    chmod -R 755 "$SCRIPT_DIR/ntopng/data"
-    echo -e "${GREEN}✓${NC} Fixed"
-fi
+# ntopng - drops privileges to ntopng (UID 997, GID 990)
+fix_data_dir "ntopng" "997" "990" "ntopng user"
 
 # OTEL Collector
 if [ -d "$SCRIPT_DIR/otel-collector/data" ]; then
